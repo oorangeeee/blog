@@ -1,0 +1,56 @@
+@font-face {
+    font-family: '网站名称';
+    src: url('../fonts/webName.TTF') format('truetype');
+}
+
+@font-face {
+    font-family: '标题';
+    src: url('../fonts/title.TTF') format('truetype');
+}
+
+@font-face {
+    font-family: '正文';
+    src: url('../fonts/content.TTF') format('truetype');
+}
+
+body {
+    font-family: '正文', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ff99664b;
+}
+
+header {
+    background-color: #ffcc66;
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-family: '网站名称', Arial, sans-serif;
+}
+
+main {
+    padding: 2rem;
+}
+
+#articles {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.article {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.article h2 {
+    margin: 0 0 0.5rem 0;
+    font-family: '标题', Arial, sans-serif;
+}
+
+.article time {
+    color: #888;
+    font-size: 0.9rem;
+}
