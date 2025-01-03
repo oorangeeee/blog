@@ -8,11 +8,15 @@
     src: url('../fonts/content.TTF') format('truetype');
 }
 
+:root {
+    --background-color: #ffcc6633;
+}
+
 body {
     font-family: '正文', Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: var(--background-color);
 }
 
 header {
@@ -25,6 +29,12 @@ header {
 
 main {
     padding: 2rem;
+    margin: 2rem auto;
+    max-width: 900px;
+    width: 90%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .last-edit {
@@ -32,4 +42,15 @@ main {
     text-align: right;
     font-size: 0.9rem;
     color: #888;
+}
+
+@media screen and (max-width: 600px) {
+    main {
+        max-width: 100%;
+        width: 100%;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
 }
