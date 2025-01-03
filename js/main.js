@@ -28,42 +28,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     articlesContainer.style.alignItems = 'center';
     articlesContainer.style.justifyContent = 'center';
     articles.forEach(article => {
+        // 外层链接元素，包裹整个标签
         const articleLink = document.createElement('a');
         articleLink.href = article.link;
         articleLink.target = '_blank'; // 在新标签页中打开链接
         articleLink.style.textDecoration = 'none'; // 去掉默认下划线
         articleLink.style.color = 'inherit'; // 继承颜色，避免文字颜色变化
         articleLink.style.display = 'block'; // 将链接设置为块级元素，包裹整个标签
+        articleLink.style.width = 'clamp(70%, 95vw, 900px)'; // 宽度动态调整，最小 70%，最大 900px
+        articleLink.style.margin = '1rem 0'; // 每个标签间增加间距
 
+        // 内层标签
         const articleElement = document.createElement('div');
         articleElement.className = 'article';
         articleElement.style.textAlign = 'center'; // 居中显示文字
         articleElement.style.borderRadius = '12px'; // 添加圆角
-        articleElement.style.margin = '1rem 0'; // 每个标签间增加间距
         articleElement.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'; // 添加阴影
         articleElement.style.padding = '1rem'; // 内边距
-        articleElement.style.width = 'clamp(70%, 95vw, 95%)'; // 使用动态宽度
         articleElement.style.backgroundColor = '#ffffff'; // 设置白色背景
         articleElement.style.transition = 'transform 0.3s'; // 添加过渡效果
         articleElement.onmouseover = () => articleElement.style.transform = 'scale(1.03)'; // 鼠标悬停时放大
         articleElement.onmouseout = () => articleElement.style.transform = 'scale(1)'; // 鼠标移开恢复
 
+        // 文章标题
         const titleElement = document.createElement('h2');
         titleElement.style.fontFamily = '标题, Arial, sans-serif';
         titleElement.textContent = article.title;
 
+        // 时间信息
         const timeElement = document.createElement('time');
         timeElement.textContent = `最后编辑时间: ${article.lastEdited}`;
         timeElement.style.display = 'block';
         timeElement.style.marginTop = '0.5rem';
         timeElement.style.color = '#888'; // 时间文本颜色
 
-        // 将标题和时间放入标签内
+        // 将标题和时间添加到内层标签
         articleElement.appendChild(titleElement);
         articleElement.appendChild(timeElement);
 
-        // 将整个 div 包裹在链接中
+        // 将内层标签添加到链接元素
         articleLink.appendChild(articleElement);
+        // 将链接元素添加到页面容器中
         articlesContainer.appendChild(articleLink);
     });
 });
