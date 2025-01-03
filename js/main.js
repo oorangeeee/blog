@@ -28,6 +28,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     articlesContainer.style.alignItems = 'center';
     articlesContainer.style.justifyContent = 'center';
     articles.forEach(article => {
+        const articleLink = document.createElement('a');
+        articleLink.href = article.link;
+        articleLink.target = '_blank'; // 在新标签页中打开链接
+        articleLink.style.textDecoration = 'none'; // 去掉默认下划线
+        articleLink.style.color = 'inherit'; // 继承颜色，避免文字颜色变化
+        articleLink.style.display = 'block'; // 将链接设置为块级元素，包裹整个标签
+
         const articleElement = document.createElement('div');
         articleElement.className = 'article';
         articleElement.style.textAlign = 'center'; // 居中显示文字
@@ -43,24 +50,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const titleElement = document.createElement('h2');
         titleElement.style.fontFamily = '标题, Arial, sans-serif';
-        const linkElement = document.createElement('a');
-        linkElement.href = article.link;
-        linkElement.target = '_blank'; // 在新标签页中打开链接
-        linkElement.textContent = article.title;
-        linkElement.style.textDecoration = 'none'; // 去掉链接下划线
-        linkElement.style.color = '#333'; // 设置链接颜色
-        linkElement.onmouseover = () => linkElement.style.color = '#007BFF'; // 鼠标悬停时改变颜色
-        linkElement.onmouseout = () => linkElement.style.color = '#333'; // 鼠标移开恢复颜色
+        titleElement.textContent = article.title;
 
-        titleElement.appendChild(linkElement);
         const timeElement = document.createElement('time');
         timeElement.textContent = `最后编辑时间: ${article.lastEdited}`;
         timeElement.style.display = 'block';
         timeElement.style.marginTop = '0.5rem';
         timeElement.style.color = '#888'; // 时间文本颜色
 
+        // 将标题和时间放入标签内
         articleElement.appendChild(titleElement);
         articleElement.appendChild(timeElement);
-        articlesContainer.appendChild(articleElement);
+
+        // 将整个 div 包裹在链接中
+        articleLink.appendChild(articleElement);
+        articlesContainer.appendChild(articleLink);
     });
 });

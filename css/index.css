@@ -21,11 +21,35 @@ body {
 }
 
 header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background-color: #ffcc66;
     color: white;
     padding: 1rem;
-    text-align: left;
     font-family: '网站名称', Arial, sans-serif;
+}
+
+header h1 {
+    margin: 0;
+}
+
+.header-icons {
+    display: flex;
+    gap: 1rem;
+    font-size: 1.5rem;
+    /* 图标大小 */
+}
+
+.header-icons a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.header-icons a:hover {
+    color: #007BFF;
+    /* 鼠标悬停时的颜色变化 */
 }
 
 main {
