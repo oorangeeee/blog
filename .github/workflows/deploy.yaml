@@ -23,4 +23,4 @@ jobs:
         mkdir -p ~/.ssh
         echo "$SSH_PASSWORD" > ~/.ssh/password
         chmod 600 ~/.ssh/password
-        sshpass -f ~/.ssh/password ssh -o StrictHostKeyChecking=no root@${{ secrets.SSH_PASSWORD }} 'cd /root/blog/blog && git pull'
+        sshpass -f ~/.ssh/password ssh -o StrictHostKeyChecking=no root@${{ secrets.SSH_HOST }} 'cd /root/blog/blog && git pull'
