@@ -28,17 +28,24 @@ header {
     color: white;
     padding: 1rem;
     font-family: '网站名称', Arial, sans-serif;
+    position: relative;
+    /* 添加相对定位 */
 }
 
-header h1 {
-    margin: 0;
-}
-
+/* 设置 header-icons 的位置 */
 .header-icons {
     display: flex;
     gap: 1rem;
     font-size: 1.5rem;
     /* 图标大小 */
+    position: absolute;
+    /* 绝对定位 */
+    right: 1rem;
+    /* 距离右边 1rem */
+    top: 50%;
+    /* 垂直居中 */
+    transform: translateY(-50%);
+    /* 垂直居中 */
 }
 
 .header-icons a {
@@ -48,7 +55,7 @@ header h1 {
 }
 
 .header-icons a:hover {
-    color: #007BFF;
+    color: #ff6666;
     /* 鼠标悬停时的颜色变化 */
 }
 
