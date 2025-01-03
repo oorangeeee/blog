@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const articles = [
-        { title: '文章一', lastEdited: '2023-10-01', link: 'article1.html' },
-        { title: '文章二', lastEdited: '2023-10-05', link: 'article2.html' },
-        { title: '文章三', lastEdited: '2023-10-10', link: 'article3.html' }
+        { title: '文章一', lastEdited: '2023-10-01', link: 'html/article1.html' },
+        { title: '文章二', lastEdited: '2023-10-05', link: 'html/article2.html' },
+        { title: '文章三', lastEdited: '2023-10-10', link: 'html/article3.html' }
     ];
 
     const articlesContainer = document.getElementById('articles');
