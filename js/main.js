@@ -1,7 +1,21 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const articles = [
-        { title: '欢迎来到我的博客', lastEdited: '2025-01-03', link: 'html/welcome.html' },
-    ];
+document.addEventListener('DOMContentLoaded', async () => {
+    const articles = [];
+
+    // 获取html文件列表
+    const response = await fetch('../html/filelist.json');
+    const fileList = await response.json();
+
+    for (const file of fileList) {
+        const res = await fetch(`../html/${file}`);
+        const text = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+
+        const title = doc.querySelector('head > title').textContent;
+        const lastEdited = doc.querySelector('body > footer.last-edit > p').textContent.match(/最后编辑时间: (.+)/)[1];
+
+        articles.push({ title, lastEdited, link: `html/${file}` });
+    }
 
     // 按照时间排序，越新的越靠上
     articles.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited));
