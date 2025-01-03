@@ -7,33 +7,20 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 检出代码
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # Step 2: 设置 SSH 私钥
-      - name: Set up SSH key
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }} # 从 Secrets 中读取私钥
-          SSH_HOST: ${{ secrets.SSH_HOST }}               # 在 Secrets 中设置的服务器 IP 或域名
-        run: |
-          # 创建 .ssh 目录
-          mkdir -p \~/.ssh
-          chmod 700 \~/.ssh
+    - name: Install SSH client and sshpass
+      run: sudo apt-get install -y openssh-client sshpass
 
-          # 写入私钥到 id_rsa 文件中
-          echo "$SSH_PRIVATE_KEY" > \~/.ssh/id_rsa
-          chmod 600 \~/.ssh/id_rsa
-
-          # 自动添加服务器的主机密钥到 known_hosts
-          ssh-keyscan -H $SSH_HOST >> \~/.ssh/known_hosts
-
-      # Step 3: 部署到服务器
-      - name: Deploy to server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }} # 在 Secrets 中设置的服务器 IP 或域名
-        run: |
-          ssh -o StrictHostKeyChecking=no root@$SSH_HOST 'cd /root/blog/blog && git pull'
+    - name: Deploy to server
+      env:
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PASSWORD" > ~/.ssh/password
+        chmod 600 ~/.ssh/password
+        sshpass -f ~/.ssh/password ssh -o StrictHostKeyChecking=no root@${{ secrets.SSH_PASSWORD }} 'cd /root/blog/blog && git pull'
