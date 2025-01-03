@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// 创建文章元素的函数
 function createArticleElement(article) {
     // 外层链接元素，包裹整个标签
     const articleLink = document.createElement('a');
@@ -91,8 +90,10 @@ function createArticleElement(article) {
 
     // 文章标题容器
     const titleContainer = document.createElement('div');
-    titleContainer.style.display = 'flex'; // 使用 flex 布局，方便加入图标
+    titleContainer.style.display = 'inline-flex'; // 使用 inline-flex 布局
     titleContainer.style.alignItems = 'center'; // 垂直居中对齐
+    titleContainer.style.justifyContent = 'center'; // 水平居中对齐
+    titleContainer.style.width = '100%'; // 确保容器宽度占满，整体居中
 
     // 如果是置顶文章，添加置顶图标
     if (article.priority === 'top') {
