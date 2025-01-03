@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 按照时间排序，越新的越靠上
     articles.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited));
 
+    // 输出到控制台
+    console.log(articles);
+
     const articlesContainer = document.getElementById('articles');
 
     articles.forEach(article => {
