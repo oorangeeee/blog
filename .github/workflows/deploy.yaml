@@ -19,9 +19,8 @@ jobs:
     - name: Deploy to server
       env:
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}
       run: |
         mkdir -p ~/.ssh
         echo "$SSH_PASSWORD" > ~/.ssh/password
         chmod 600 ~/.ssh/password
-        sshpass -f ~/.ssh/password ssh -o StrictHostKeyChecking=no root@$SSH_HOST 'cd /root/blog/blog && git pull'
+        sshpass -f ~/.ssh/password ssh -o StrictHostKeyChecking=no root@${{ secrets.SSH_PASSWORD }} 'cd /root/blog/blog && git pull'
