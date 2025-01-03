@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const response = await fetch('../html/filelist.json');
     const fileList = await response.json();
 
+    // 输出fileList到控制台
+    console.log('File list:', fileList);
+
     for (const file of fileList) {
         const res = await fetch(`../html/${file}`);
         const text = await res.text();
