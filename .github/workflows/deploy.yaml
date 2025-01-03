@@ -8,19 +8,32 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-22.04
+
     steps:
+      # Step 1: 检出代码
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Step 2: 设置 SSH 私钥
       - name: Set up SSH key
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }} # 从 Secrets 中读取私钥
+          SSH_HOST: ${{ secrets.SSH_HOST }}               # 在 Secrets 中设置的服务器 IP 或域名
         run: |
+          # 创建 .ssh 目录
           mkdir -p \~/.ssh
+          chmod 700 \~/.ssh
+
+          # 写入私钥到 id_rsa 文件中
           echo "$SSH_PRIVATE_KEY" > \~/.ssh/id_rsa
           chmod 600 \~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> \~/.ssh/known_hosts
 
+          # 自动添加服务器的主机密钥到 known_hosts
+          ssh-keyscan -H $SSH_HOST >> \~/.ssh/known_hosts
+
+      # Step 3: 部署到服务器
       - name: Deploy to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }} # 在 Secrets 中设置的服务器 IP 或域名
         run: |
-          ssh root@${{ secrets.SSH_HOST }} 'cd /root/blog/blog && git pull'
+          ssh root@$SSH_HOST 'cd /root/blog/blog && git pull'
