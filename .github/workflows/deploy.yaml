@@ -36,4 +36,4 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }} # 在 Secrets 中设置的服务器 IP 或域名
         run: |
-          ssh root@$SSH_HOST 'cd /root/blog/blog && git pull'
+          ssh -o StrictHostKeyChecking=no root@$SSH_HOST 'cd /root/blog/blog && git pull'
