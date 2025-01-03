@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const articles = [
-        { title: '文章一', lastEdited: '2023-10-01', link: 'html/article1.html' },
-        { title: '文章二', lastEdited: '2023-10-05', link: 'html/article2.html' },
-        { title: '文章三', lastEdited: '2023-10-10', link: 'html/article3.html' }
+        { title: '欢迎来到我的博客', lastEdited: '2025-01-03', link: 'html/welcome.html' },
     ];
+
+    // 按照时间排序，越新的越靠上
+    articles.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited));
 
     const articlesContainer = document.getElementById('articles');
 
