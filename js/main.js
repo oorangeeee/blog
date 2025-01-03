@@ -21,10 +21,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 按照时间排序，越新的越靠上
-    articles.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited));
+    articles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
 
     // 输出到控制台
-    console.log(articles);
+    console.log('Sorted articles:', articles);
 
     const articlesContainer = document.getElementById('articles');
 
