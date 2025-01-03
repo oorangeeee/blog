@@ -21,18 +21,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     articles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
     // 输出到控制台
     console.log('Sorted articles:', articles);
-
     const articlesContainer = document.getElementById('articles');
     // 设置容器的样式为居中
     articlesContainer.style.display = 'flex';
     articlesContainer.style.flexDirection = 'column';
     articlesContainer.style.alignItems = 'center';
     articlesContainer.style.justifyContent = 'center';
-
     articles.forEach(article => {
         const articleElement = document.createElement('div');
         articleElement.className = 'article';
         articleElement.style.textAlign = 'center'; // 居中显示文字
+        articleElement.style.borderRadius = '12px'; // 添加圆角
+        articleElement.style.margin = '1rem 0'; // 每个标签间增加间距
+        articleElement.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'; // 添加阴影
+        articleElement.style.padding = '1rem'; // 内边距
+        articleElement.style.width = 'clamp(70%, 95vw, 95%)'; // 使用动态宽度
+        articleElement.style.backgroundColor = '#ffffff'; // 设置白色背景
+        articleElement.style.transition = 'transform 0.3s'; // 添加过渡效果
+        articleElement.onmouseover = () => articleElement.style.transform = 'scale(1.03)'; // 鼠标悬停时放大
+        articleElement.onmouseout = () => articleElement.style.transform = 'scale(1)'; // 鼠标移开恢复
 
         const titleElement = document.createElement('h2');
         titleElement.style.fontFamily = '标题, Arial, sans-serif';
@@ -40,10 +47,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         linkElement.href = article.link;
         linkElement.target = '_blank'; // 在新标签页中打开链接
         linkElement.textContent = article.title;
-        titleElement.appendChild(linkElement);
+        linkElement.style.textDecoration = 'none'; // 去掉链接下划线
+        linkElement.style.color = '#333'; // 设置链接颜色
+        linkElement.onmouseover = () => linkElement.style.color = '#007BFF'; // 鼠标悬停时改变颜色
+        linkElement.onmouseout = () => linkElement.style.color = '#333'; // 鼠标移开恢复颜色
 
+        titleElement.appendChild(linkElement);
         const timeElement = document.createElement('time');
         timeElement.textContent = `最后编辑时间: ${article.lastEdited}`;
+        timeElement.style.display = 'block';
+        timeElement.style.marginTop = '0.5rem';
+        timeElement.style.color = '#888'; // 时间文本颜色
 
         articleElement.appendChild(titleElement);
         articleElement.appendChild(timeElement);
