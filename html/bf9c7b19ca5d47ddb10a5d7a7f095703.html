@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="priority" content="normal">
+    <meta name="description" content="GoLang语言大揭秘，了解GoLang的底层知识。">
+    <meta name="keywords" content="GoLang, 编程, 面试, 技术分享">
+    <meta name="author" content="橙子">
+    <title>GoLang语言大揭秘！</title>
+    <link rel="stylesheet" href="../css/article.css">
+    <link rel="stylesheet" href="../css/beian.css">
+    <link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <header>
+        <h1>GoLang语言大揭秘！</h1>
+    </header>
+    <main>
+        <p>本篇文章旨在解密GoLang中的零零散散的小知识，为面试或者日常开发打下坚实的基础。</p>
+        <h1>为什么选择GoLang</h1>
+        <p>在一切开始之前我们先来聊聊GoLang相较于其他语言的优劣势。</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>优势</th>
+                    <th>劣势</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <ol>
+                            <li><strong>简单易学</strong>：Go可以在很短的时间内上手开发，但了解底层机制需要一些时间。</li>
+                            <li><strong>跨平台编译</strong>：结果为二进制可执行文件</li>
+                            <li><strong>简洁的语法</strong>：代码风格统一</li>
+                            <li><strong>天生支持高并发</strong>：Go通过Goroutine和Channel实现不同于其他语言的并发机制。<br>Channel的理论依据是CSP并发模型，即通过通信来共享内存；通过runtime运行时实现了GMP模型作为自己的调度模型，一个用户线程对应一个系统线程，同时在GMP的调度下可以将多个协程在一个用户线程中并发运行，极大的减少了用户态到内核态的切换成本。
+                            </li>
+                            <li><strong>行之有效的GC</strong>：Go语言最新的三色标记法+混合写屏障使得其GC效果相当不错，尽可能的减少了STW的时间。</li>
+                        </ol>
+                    </td>
+                    <td>
+                        <ol>
+                            <li>“Yes and No”的面对对象编程思想，不利于实现代码的统一规范和设计模式。</li>
+                            <li>缺乏一些高级特性，如：泛型编程，异常处理机制，多态等。</li>
+                        </ol>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p>正因上述的诸多优势，Go语言才能得到越来越多开发者的青睐。</p>
+        <h1>GoLang是面向对象的语言吗</h1>
+        <p>官方的QA给出的回答是yes and no。也就是说“是也不是”，因为Go不会强制要求你用面向对象来写，但是它确实可以用结构体+组合等方式实现面向对象形式的编程。</p>
+        <p>为了介绍在GoLang中的面向对象编程，我们要了解面向对象的三大特性在GO中的表现：</p>
+        <ol>
+            <li><strong>封装</strong>：
+                Go语言实现封装和其他语言的private、public等关键字不同，Go语言通过首字母大小写来控制访问权限。首字母大写表示公有，首字母小写表示私有。而对于包级别的变量和函数，只有在同一个包内才能访问。值得注意的是结构体中的小写字段对于同一个包内是可以访问的。
+            </li>
+            <li><strong>继承</strong>：
+                Go语言没有继承的概念，但是可以通过结构体嵌套来实现类似继承的效果。或者也可以通过组合的方式，子结构体可以访问父结构体的字段和方法。
+            </li>
+            <li><strong>多态</strong>：
+                Go语言通过接口来实现多态。接口是一组方法的集合，任何类型只要实现了接口中的所有方法，就可以被视为该接口类型。这样就可以实现不同类型之间的多态性。
+        </ol>
+        <h2>嵌入和组合的区别</h2>
+        <p>有很多人不知道嵌入和组合的区别，这里澄清一下。</p>
+        <p>请看如下代码：</p>
+        <pre>
+            <code>
+                type s1 struct {
+                a int
+                }
+                
+                type s2 struct {
+                s1 // 嵌入
+                b int
+                }
+                
+                type s3 struct {
+                x s1 // 组合
+                c int
+                }
+            </code>
+        </pre>
+        <p>嵌入的情况下s2可以直接调用s2.a来访问对应的值，也可以调用s2.s1.a来访问a</p>
+        <p>组合的情况下s3只能通过s3.x.a来访问a</p>
+        <p>如果结构体有方法，那么也是同理。这些都可以用来实现继承。</p>
+        <h1>
+            <p>持续更新。。。</p>
+        </h1>
+    </main>
+    <footer class="last-edit">
+        <p>最后编辑时间: 2025-01-08 20:21:48</p>
+    </footer>
+    <div id="footer-placeholder"></div>
+    <footer class="beian-footer">
+        <div class="beian-info">
+            <img src="https://s21.ax1x.com/2025/01/03/pEpZbs1.png" alt="备案图标" class="beian-icon">
+            <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer" target="_blank">
+                鄂公网安备 42011102005555 </a>
+            <span class="spacer"> </span>
+            <a href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank" class="icp-beian">
+                青ICP备2024002362号-1 </a>
+        </div>
+    </footer>
+</body>
+
+</html>
