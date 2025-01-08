@@ -1,31 +1,40 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
 .beian-footer {
-    position: relative;
-    /* 修改为相对定位 */
     text-align: center;
     padding: 8px 0;
     z-index: 1000;
     font-size: 0.5vw;
     color: #333;
     font-family: Arial, sans-serif;
-    /* 设置为默认字体 */
 }
 
 .beian-info {
     display: inline-flex;
-    /* 使用内联flexbox来保持在一行内 */
     align-items: center;
+    font-family: Arial, sans-serif; /* 设置为默认字体 */
 }
 
 .beian-icon {
     width: 0.5vw;
-    /* 固定图标大小 */
     height: auto;
     vertical-align: middle;
     margin-right: 5px;
-    /* 在图标和文字之间添加一些间距 */
 }
 
 .spacer {
     margin: 0 5px;
-    /* 间隔5个空格 */
 }
