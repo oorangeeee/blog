@@ -26,6 +26,9 @@
                 <li><a href="#is-oop">GoLang是面向对象的语言吗</a></li>
                 <li><a href="#embed-vs-compose">嵌入和组合的区别</a></li>
                 <li><a href="#make-vs-new">make和new的区别</a></li>
+                <li><a href="#slice-vs-array">slice和array的区别</a></li>
+                <li><a href="#slice-append">slice的扩容机制</a></li>
+                <li><a href="#for_range_v">for range的坑</a></li>
             </ul>
         </nav>
         <p class="article-intro">本篇文章旨在解密GoLang中的零零散散的小知识，为面试或者日常开发打下坚实的基础。</p>
@@ -115,6 +118,195 @@ type s3 struct {
             <p>你可能会好奇如果用new来创建一个slice、map、channel会怎么样？</p>
             <p>答案是：会报空指针错误。除非你new完后又用make来初始化。</p>
         </section>
+
+        <section id="slice-vs-array">
+            <h1>slice和array的区别</h1>
+            <ol>
+                <li>
+                    <p>slice是所谓的“引用类型”，而array是值类型。</p>
+                    <p>实际上Go语言中没有类似于C++中的引用类型，所有的引用类型的底层其实都是指针。</p>
+                    <p>slice的底层实现包含三个字段：</p>
+                    <p>
+                    <ul>
+                        <li>array：指向底层数组的指针</li>
+                        <li>len：切片的长度</li>
+                        <li>cap：切片的容量</li>
+                    </ul>
+                    </p>
+                </li>
+                <li>
+                    <p>slice和array的初始化方式不同。</p>
+                    <p>slice的初始化方式是：</p>
+                    <p>
+                    <pre><code>
+slice := []int{1, 2, 3}
+                </code></pre>
+                    </p>
+                    <p>array的初始化方式是：</p>
+                    <p>
+                    <pre><code>
+array := [3]int{1, 2, 3}
+                </code></pre>
+                    </p>
+                    <p>区别在于数组初始化时需要指定长度，而slice不需要。并且slice可以通过make初始化，但是array则是可以用new来生成新对象。</p>
+                </li>
+                <li>
+                    <p>slice可以动态扩容，而array不可以。</p>
+                </li>
+            </ol>
+        </section>
+        <section id="slice-append">
+            <h1>slice的扩容机制</h1>
+            <p>在讲述具体的扩容机制的时候我们要先定义几个概念：</p>
+            <p>
+            <ul>
+                <li>oldcap：当前的容量</li>
+                <li>newcap：最终确定的扩容目标容量</li>
+                <li>wishcap：扩容的期望容量</li>
+            </ul>
+            </p>
+            <p>扩容的逻辑如图：</p>
+            <img src="../images/slice_growSlice.png" alt="slice扩容逻辑">
+            <p>图中所说的最后一步的内存对齐，实际上是Go语言为了减少CPU的内存访问次数，将内存通过一定的逻辑对齐到特殊值的操作。</p>
+            <p>这就是为什么有时候的实际扩容值和期望扩容值不一样。</p>
+        </section>
+
+        <section id="for_range_v">
+            <h1>for range的坑</h1>
+            <p>for range其实有很多坑。。。。我们一个一个展开。</p>
+            <h2>临时变量</h2>
+            <p>在go 1.22.0 之前for i,v :=range slice 中，i，v的地址是不会发生改变的！也就是说整个循环用到的i，v都是同一个。</p>
+            <p>这就导致如果你在循环中用一个数组存储i，v的地址，那么这个数组中的所有元素的地址都是相同的。</p>
+            <p>举个例子：</p>
+            <pre><code>
+package main
+import "fmt"
+func main() {
+    map1 := make(map[string]int)
+    map1["a"] = 1
+    map1["b"] = 2
+    map1["c"] = 3
+    keys := make([]*string, 0, len(map1))
+    values := make([]*int, 0, len(map1))
+    for key, value := range map1 {
+        fmt.Println(key, value)
+        keys = append(keys, &key)
+        values = append(values, &value)
+    }
+    fmt.Println(keys)
+    fmt.Println(values)
+}
+            </code></pre>
+            <p>Go 1.22.0 输出结果是：</p>
+            <pre><code>
+a 1
+b 2
+c 3
+[0xc00008a030 0xc00008a050 0xc00008a070]
+[0xc000096068 0xc0000960a0 0xc0000960b0]
+            </code></pre>
+            <p>Go 1.22.0 之前输出结果是：</p>
+            <pre><code>
+b 2
+a 1
+c 3
+[0xc000010200 0xc000010200 0xc000010200]
+[0xc000016070 0xc000016070 0xc000016070]
+            </code></pre>
+            <p>值得一提的是两次顺序不同是因为遍历map是随机顺序的。</p>
+            <p>在go 1.22.0 之后，修复了这个“特性”，i，v的变量发生了改变，所以不会出现上述问题。</p>
+            <p>值得注意的是不仅仅是遍历slice，map，array，channel都会出现这个问题。当然这些问题也都在Go 1.22.0 之后得到了修复。</p>
+            <h2>遍历map</h2>
+            <p>实际上在遍历map的时候一定是无序的，因为Go语言的map底层实现是hash表，而hash表的特性就是无序的。</p>
+            <p>所以如果你需要有序的map，那么你需要使用slice来存储key，然后对slice进行排序。</p>
+            <p>值得一提的是map的无序遍历实际上是go官方刻意实现的，每次遍历都会随机决定一个初始bucket，从这个桶开始遍历，每次也会随机决定一个桶内遍历的起始位置，来增加随机性。但是一次遍历中每个桶的初始遍历位置是一样的。
+            </p>
+            <h2>遍历slice时插入值</h2>
+            <p>在遍历slice时插入值，不会导致死循环。</p>
+            <p>因为每次for range的时候都会拷贝一份slice，注意不是深拷贝，而是浅拷贝。所以每次你遍历slice的时候插入值也不影响其len和cap自然不会导致死循环。</p>
+            <p>举个例子：</p>
+            <pre><code>
+package main
+import "fmt"
+func main() {
+    slice := []int{1, 2, 3}
+    for i, v := range slice {
+        slice = append(slice, i)
+        fmt.Println(i, v)
+    }
+    fmt.Println(slice)
+}
+            </code></pre>
+            <p>输出结果是：</p>
+            <pre><code>
+0 1
+1 2
+2 3
+[1 2 3 0 1 2]
+            </code></pre>
+            <p>可以看出遍历的时候插入值不会造成影响。</p>
+            <h2>遍历slice时改变值</h2>
+            <p>在遍历slice时改变值，会影响原slice!</p>
+            <p>这时因为for range做的是浅拷贝和原slice共用一个底层数组，所以改变值会影响原slice。</p>
+            <p>举个例子：</p>
+            <pre><code>
+package main
+
+import "fmt"
+
+func main() {
+    // 遍历的时候改变值
+    slice := []int{1, 2, 3}
+    for i, v := range slice {
+        if i < len(slice)-1 {
+            slice[i+1] = v
+        }
+        fmt.Println(i, v)
+    }
+    fmt.Println(slice)
+}
+            </code></pre>
+            <p>输出结果是：</p>
+            <pre><code>
+0 1
+1 1
+2 1
+[1 1 1]
+            </code></pre>
+            <p>可以看出遍历的时候改变值会影响原slice。</p>
+            <h2>遍历slice时删除值</h2>
+            <p>在遍历slice时删除值，会对结果有影响，但是是可以预测的。</p>
+            <p>因为for range做的是浅拷贝，所以其len和cap是固定的，所以删除值会影响原slice的输出，但是不会影响输出的个数。</p>
+            <p>举个例子：</p>
+            <pre><code>
+package main
+
+import "fmt"
+
+func main() {
+    // 遍历的时候删除值
+    slice := []int{1, 2, 3}
+    for i, v := range slice {
+        if i < len(slice)-1 { 
+            slice=append(slice[:i+1], slice[i+2:]...) 
+        }
+        fmt.Println(i, v)
+    }
+    fmt.Println(slice)
+}
+            </code></pre>
+            <p>输出结果是：</p>
+            <pre><code>
+0 1
+1 3
+2 3
+[1 3]
+            </code></pre>
+            <p>可以看出遍历的时候删除值会影响原slice。</p>
+            <p>之所以会输出两个3，是因为在输出0 1的时候，已经用append覆盖了2，但是临时切片的len和cap不变，所以会输出最后一个数，自然也就是是3。</p>
+            <p>又一次印证，for range 生成的临时数组和原数组是共用一个底层数组的，所以改变值会影响原数组。</p>
+        </section>
+
 
 
     </main>
