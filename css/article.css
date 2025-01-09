@@ -123,9 +123,12 @@ main {
     margin: 2rem auto;
     max-width: 900px;
     width: 90%;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 204, 102, 0.1));
+    border-radius: 15px;
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.1),
+        0 5px 15px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
 }
 
 .last-edit {
@@ -240,14 +243,22 @@ nav ul li a:hover {
 section {
     margin: 3rem 0;
     padding: 2rem;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease;
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.15),
+        0 5px 15px rgba(0, 0, 0, 0.1),
+        0 3px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 section:hover {
     transform: translateY(-3px);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.2),
+        0 10px 20px rgba(0, 0, 0, 0.12),
+        0 5px 10px rgba(0, 0, 0, 0.08);
 }
 
 /* 美化标题样式 */
@@ -364,4 +375,28 @@ body::after {
     transform: scaleX(var(--scroll-percent, 0));
     transition: transform 0.1s ease;
     box-shadow: 0 0 10px rgba(3, 153, 145, 0.5);
+}
+
+/* 文章简介样式 */
+.article-intro {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #333;
+    padding: 1.5rem 2rem;
+    margin: 2rem 0;
+    background: rgba(255, 204, 102, 0.15);
+    border-left: 4px solid #ffcc66;
+    border-radius: 0 8px 8px 0;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.05),
+        0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.article-intro:hover {
+    background: rgba(255, 204, 102, 0.2);
+    transform: translateX(5px);
+    box-shadow:
+        0 6px 8px rgba(0, 0, 0, 0.08),
+        0 2px 4px rgba(0, 0, 0, 0.12);
 }
