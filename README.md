@@ -19,3 +19,7 @@
 > 以上内容启发于[这篇文章][web1]
 
 [web1]: https://kristoff.it/blog/static-site-paradox/
+
+## 博客内容
+
+博客内容包含技术分享，生活分享，面试准备，游戏讨论，mod开发与分享等等。
