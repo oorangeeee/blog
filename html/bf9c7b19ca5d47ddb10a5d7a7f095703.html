@@ -84,23 +84,21 @@
             <h2>嵌入和组合的区别</h2>
             <p>有很多人不知道嵌入和组合的区别，这里澄清一下。</p>
             <p>请看如下代码：</p>
-            <pre>
-                <code>
-                    type s1 struct {
-                    a int
-                    }
-                    
-                    type s2 struct {
-                    s1 // 嵌入
-                    b int
-                    }
-                    
-                    type s3 struct {
-                    x s1 // 组合
-                    c int
-                    }
-                </code>
-            </pre>
+            <pre><code>
+type s1 struct {
+    a int
+}
+
+type s2 struct {
+    s1  // 嵌入
+    b int
+}
+
+type s3 struct {
+    x s1  // 组合
+    c int
+}
+            </code></pre>
             <p>嵌入的情况下s2可以直接调用s2.a来访问对应的值，也可以调用s2.s1.a来访问a</p>
             <p>组合的情况下s3只能通过s3.x.a来访问a</p>
             <p>如果结构体有方法，那么也是同理。这些都可以用来实现继承。</p>
@@ -117,6 +115,8 @@
             <p>你可能会好奇如果用new来创建一个slice、map、channel会怎么样？</p>
             <p>答案是：会报空指针错误。除非你new完后又用make来初始化。</p>
         </section>
+
+
     </main>
     <footer class="beian-footer">
         <div class="beian-info">

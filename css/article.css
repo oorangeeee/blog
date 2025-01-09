@@ -50,16 +50,63 @@ th {
 }
 
 pre {
-    background-color: rgba(13, 204, 140, 0.336);
-    /* 设置背景颜色 */
-    border: 1px solid #000000;
-    /* 设置边框 */
-    border-radius: 5px;
-    /* 设置圆角 */
-    padding: 1rem;
-    /* 设置内边距 */
+    background-color: #282c34;
+    /* VSCode暗色主题的背景色 */
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem auto;
+    /* 使用auto实现居中 */
+    width: 90%;
+    /* 设置宽度，留出适当边距 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     overflow-x: auto;
-    /* 允许水平滚动 */
+    transition: all 0.3s ease;
+}
+
+pre:hover {
+    transform: scale(1.01);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+pre code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #abb2bf;
+    /* VSCode默认文本颜色 */
+    line-height: 1.5;
+    display: block;
+    padding: 0;
+    white-space: pre;
+    /* 保持原有的空格和换行 */
+    tab-size: 4;
+    /* 设置制表符宽度 */
+}
+
+/* 代码高亮颜色 - 模仿VSCode的配色 */
+.keyword {
+    color: #c678dd;
+    /* 关键字紫色 */
+}
+
+.type {
+    color: #e5c07b;
+    /* 类型黄色 */
+}
+
+.comment {
+    color: #5c6370;
+    /* 注释灰色 */
+    font-style: italic;
+}
+
+.string {
+    color: #98c379;
+    /* 字符串绿色 */
+}
+
+.number {
+    color: #d19a66;
+    /* 数字橙色 */
 }
 
 code {
