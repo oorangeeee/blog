@@ -799,6 +799,86 @@ false
             <p>a1和a3的实际类型和实际值不同，所以返回false。</p>
         </section>
 
+        <section id="compare">
+            <h1>比较的奥秘</h1>
+            <p>Go语言中有这么多种酷酷的数据类型，你还可以自定义无数结构体和接口，难道他们都可以相互比较吗？！</p>
+            <p>事实上，并非如此！</p>
+            <p>本章节将聚焦相等比较和大小比较两个方面，来讲解Go语言中比较的奥秘。</p>
+            <h2>相等比较</h2>
+            <p>相等比较，就是比较两个值是否相等。</p>
+            <p>在上一节中，已经讲述了接口的比较奥秘，这一届则聚焦其他的数据类型。</p>
+            <p>事实上，对于大家耳熟能详的数据结构中有那么几个是不能通过"==""!="比较的，那就是：</p>
+            <ul>
+                <li>
+                    <p>map</p>
+                </li>
+                <li>
+                    <p>slice</p>
+                </li>
+                <li>
+                    <p>func</p>
+                </li>
+            </ul>
+            <p>这些数据结构在比较的时候，会报错。</p>
+            <p>同理，包含这些数据结构的struct也无法比较！</p>
+            <p>是不是很简单呢？</p>
+            <p>但是如果你真的想比较他们，应该怎么做？通过反射！reflect.DeepEqual()!</p>
+            <p>但是，反射的性能开销很大，所以如果可以，尽量避免使用反射。</p>
+            <p>事实上，DeepEqual()可以比较任何一个类型，不仅仅是map、slice、func。</p>
+            <p>而且都是深度比较，即不仅比较值，还比较值的结构。</p>
+            <p>这里给出DeepEqual()的判断标准:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>类型</th>
+                        <th>深度相等情形</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Array</td>
+                        <td>相同索引处的元素“深度”相等</td>
+                    </tr>
+                    <tr>
+                        <td>Struct</td>
+                        <td>相应字段，包含导出和不导出，“深度”相等</td>
+                    </tr>
+                    <tr>
+                        <td>Func</td>
+                        <td>只有两者都是 nil 时</td>
+                    </tr>
+                    <tr>
+                        <td>Interface</td>
+                        <td>两者存储的具体值“深度”相等</td>
+                    </tr>
+                    <tr>
+                        <td>Map</td>
+                        <td>1、都为 nil；2、非空、长度相等，指向同一个 map 实体对象，或者相应的 key 指向的 value “深度”相等</td>
+                    </tr>
+                    <tr>
+                        <td>Pointer</td>
+                        <td>1、使用 == 比较的结果相等；2、指向的实体“深度”相等</td>
+                    </tr>
+                    <tr>
+                        <td>Slice</td>
+                        <td>1、都为 nil；2、非空、长度相等，首元素指向同一个底层数组的相同元素，即 &x[0] == &y[0] 或者 相同索引处的元素“深度”相等</td>
+                    </tr>
+                    <tr>
+                        <td>numbers, bools, strings, and channels</td>
+                        <td>使用 == 比较的结果为真</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>上述规则来自于：<a href="https://golang.design/go-questions/stdlib/reflect/compare/" target="_blank"
+                    rel="noreferrer">Go 程序员面试笔试宝典© 2022 饶全成, 欧长坤, 楚秦等</a></p>
+            <h2>大小比较</h2>
+            <p>大小比较，就是比较两个值的大小。</p>
+            <p>对于数值类型，和字符串类型可以直接用比较符号进行比较。</p>
+            <p>对于结构体，可以自定义比较函数，然后通过比较函数进行比较。</p>
+            <p>对于接口，则不能比较大小，当然你也可以自定义比较函数比较。</p>
+            <p>除了结构体、接口还有func等类型，都可以自定义比较函数比较。</p>
+        </section>
+
 
     </main>
     <footer class="beian-footer">
