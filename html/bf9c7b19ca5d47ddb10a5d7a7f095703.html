@@ -30,6 +30,7 @@
                 <li><a href="#slice-append">slice的扩容机制</a></li>
                 <li><a href="#for_range_v">for range的坑</a></li>
                 <li><a href="#pointers">Go语言的三种指针类型</a></li>
+                <li><a href="#interface">接口底层原理</a></li>
             </ul>
         </nav>
         <p class="article-intro">本篇文章旨在解密GoLang中的零零散散的小知识，为面试或者日常开发打下坚实的基础。</p>
@@ -442,6 +443,361 @@ func main() {
             <p>所以其实uintptr就是一个和指针大小相等的整数类型。可以进行指针运算，并且不能持有对象，指向的内容会被回收。</p>
         </section>
 
+        <section id="interface">
+            <h1>接口底层原理</h1>
+            <p>接口在Go语言中是一种类型，它定义了一组方法。任何实现了这些方法的类型都可以认为是实现了接口。</p>
+            <p>本章节将详细讲述interface的底层原理。</p>
+            <p>Interface在底层实现其实对应两个结构体：</p>
+            <p></p>
+            <ul>
+                <li>
+                    <p>iface：非空接口</p>
+                </li>
+                <li>
+                    <p>eface：空接口</p>
+                </li>
+            </ul>
+            </p>
+            <h2>eface</h2>
+            <p>所谓空接口，就是没有定义任何方法的接口。<br>所有类型都实现了空接口，所以空接口可以存储任何类型。</p>
+            <p>eface的结构体定义如下：</p>
+            <pre><code>
+type eface struct {
+    _type *_type
+    data unsafe.Pointer
+}
+            </code></pre>
+            <p>其中_type是类型信息，data是数据指针。</p>
+            <p>请注意_type字段在go 1.21.0之前和之后不太一样，本文章基于1.22.0版本。</p>
+            <p>在1.22.0版本中type字段如下：</p>
+            <pre><code>
+type Type struct {
+    // 类型的大小(字节数)
+    Size_       uintptr
+    
+    // 类型中包含指针的字节数(从开始位置算起)
+    // 用于 GC 扫描对象时知道需要扫描多少字节的指针
+    PtrBytes    uintptr 
+    
+    // 类型的哈希值，用于快速比较类型是否相同
+    // 避免在哈希表中重复计算
+    Hash        uint32  
+    
+    // 类型的额外标记信息，比如:
+    // - 是否是命名类型
+    // - 是否有 uncommon type 信息
+    // - 是否可以用规则内存比较
+    TFlag       TFlag   
+    
+    // 类型的对齐要求(字节数)
+    Align_      uint8   
+    
+    // 当此类型作为结构体字段时的对齐要求
+    FieldAlign_ uint8   
+    
+    // 类型的具体分类(如 int、string、struct 等)
+    Kind_       uint8   
+    
+    // 用于比较该类型两个值是否相等的函数
+    Equal func(unsafe.Pointer, unsafe.Pointer) bool
+    
+    // GC 相关的类型数据:
+    // - 如果设置了 KindGCProg，则指向 GC 程序
+    // - 否则是指针位图，用于标记哪些字节包含指针
+    GCData    *byte
+    
+    // 类型名称的偏移量，用于获取类型的字符串表示
+    Str       NameOff 
+    
+    // 指向该类型的指针类型的偏移量
+    // 例如: 如果这是 int 的类型信息，PtrToThis 指向 *int 的类型信息
+    PtrToThis TypeOff 
+}</code></pre>
+            <p>可以看出，空接口其实就是只存储了类型信息和数据指针。</p>
+            <p>所以空接口可以存储任何类型，因为任何类型都实现了空接口。</p>
+            <h2>iface</h2>
+            <p>非空接口，就是定义了方法的接口。</p>
+            <p>iface的结构体定义如下：</p>
+            <pre><code>
+type iface struct {
+    tab *itab
+    data unsafe.Pointer
+}
+            </code></pre>
+            <p>其中tab是接口表，data是数据指针。</p>
+            <p>tab的结构体定义如下：</p>
+            <pre><code>
+type itab struct {
+    // 指向接口类型信息的指针
+    // 包含了接口定义的所有方法信息
+    inter *interfacetype
+
+    // 指向具体类型信息的指针
+    // 包含了实现接口的具体类型的信息
+    _type *_type
+
+    // 类型哈希值，从 _type.hash 复制而来
+    // 用于类型断言时快速判断类型是否匹配
+    hash uint32
+
+    // 4字节填充，用于内存对齐
+    _ [4]byte
+
+    // 方法表，存储具体类型实现的接口方法地址
+    // 虽然声明为 [1]uintptr，但实际大小是可变的
+    // 包含了接口所有方法的具体实现地址
+    // fun[0]==0 表示该类型没有实现这个接口
+    fun [1]uintptr
+}
+
+type InterfaceType struct {
+    // 嵌入基础的 Type 结构
+    // 包含了类型的通用信息如大小、对齐方式等
+    // 同上面我们提到的_type结构体
+    Type
+
+    // 接口定义所在的包路径
+    // 例如: "encoding/json"
+    // 用于区分不同包中的同名接口
+    PkgPath Name
+
+    // 接口定义的所有方法列表
+    // 按方法名的哈希值排序，便于快速查找
+    Methods []Imethod
+}
+            </code></pre>
+            <p>与空接口最大的区别就是，非空接口用itab存储一个接口表，接口表中有接口类型的详细定义，也有具体实现类型的详细定义。</p>
+            <p>在接口类型的详细定义中包含接口的类型信息（接口也是一种类型）（InterfaceType.Type），接口的包路径（InterfaceType.PkgPath）和接口定义的未实现的方法（InterfaceType.Methods）。
+            </p>
+            <p>在具体实现的类型的定义中包含该类型的全部类型信息(itab._type)和所有具体实现的函数内容（itab.fun）。</p>
+            <h2>接口实现</h2>
+            <p>通过了解两种接口的结构体定义，我们可以更好地理解接口的本质。实际上，接口是一个包含了实现类型、接口类型、实现类型数据、实现方法和定义方法的数据结构。</p>
+            <p>在go语言中实现接口时隐性的。只需要实现所有接口定义的方法，就视为实现了这个接口</p>
+            <P>任何一个实现了接口的数据结构，都可以赋值给静态类型为对应接口类型的变量。</P>
+            <p>这个变量只能调用接口定义的方法，不能调用实现类型的方法。也不能访问实现类型的数据。</p>
+            <h2>itab缓存</h2>
+            <p>其实可以发现，同一个接口+同一个实现类型对应的itab是唯一的。所以如果你创建了多个变量赋值到接口类型，每一次都创建一个新的itab的话，是不是太浪费了？</p>
+            <p>例如：</p>
+            <pre><code>
+package main
+
+import "fmt"
+
+type ai interface {
+    show()
+}
+
+type a struct {
+    a int
+}
+
+func (a *a) show() {
+    fmt.Println(a.a)
+}
+
+func main() {
+    var a1 a = a{a: 1}
+    var a1i ai = &a1
+    var a2 a = a{a: 2}
+    var a2i ai = &a2
+    var a3 a = a{a: 3}
+    var a3i ai = &a3
+    a1i.show()
+    a2i.show()
+    a3i.show()
+
+}
+
+            </code></pre>
+            <p>这段代码中，如果每次将a类型赋值给ai类型都要创建新的itab的话就太麻烦了。</p>
+            <p>所以go语言中，如果两个接口类型和实现类型都相同，那么就会使用同一个itab。</p>
+            <p>这就是itab缓存。</p>
+            <p>具体而言，在go语言中itab的缓存用这样一个结构体存储：</p>
+            <pre><code>
+type itabTableType struct {
+    // entries 数组的长度
+    size uintptr
+
+    // 当前已填充的条目数量
+    count uintptr
+
+    // itab 指针数组
+    entries [itabInitSize]*itab
+}
+            </code></pre>
+            <p>entries虽说时数组其实实现方式类似于哈希表，他是通过接口类型和实际类型分别hash后的异或值来为key进行存储的。hash冲突处理方式则是采用开放寻址法。</p>
+            <p>当查找一个itab是否存在的时候，步骤如下：</p>
+            <ol>
+                <li>
+                    <p>通过接口类型和实际类型分别hash后的异或值来计算出在entries数组中的索引。</p>
+                </li>
+                <li>
+                    <p>如果entries[index]为空，则说明该itab不存在。</p>
+                </li>
+                <li>
+                    <p>如果entries[index]不为空，则说明该itab存在。注意此时有可能发生hash冲突，要再次比较itab记录的type值和现在正在查找的type值是否相同。</p>
+                </li>
+            </ol>
+            <h2>接口比较</h2>
+            <br>
+            <h3>接口之间比较</h3>
+            <p>不同接口之间比较会报错。除了空接口，空接口可以和任何一个接口值或者类型值比较，此时只比较实际数据类型和实际数据值。</p>
+            <p>举个例子：</p>
+            <pre><code>
+package main
+
+import "fmt"
+
+type ai interface {
+    showa()
+}
+
+type bi interface {
+    showb()
+}
+
+type a struct {
+    a int
+}
+
+func (a a) showa() {
+    fmt.Println(a.a)
+}
+
+func (a a) showb() {
+    fmt.Println(a.a)
+}
+
+type b struct {
+    b int
+}
+
+func (b b) showa() {
+    fmt.Println(b.b)
+}
+
+func (b b) showb() {
+    fmt.Println(b.b)
+}
+
+func main() {
+    var aa ai = a{a: 1}
+    var bb bi = b{b: 1}
+    fmt.Println(aa == bb)
+}
+
+            </code></pre>
+            <p>最后一句会报错，因为ai和bi都不是空接口，并且ai和bi的接口类型不一样。</p>
+            <p>再来看这个代码：</p>
+            <pre><code>
+package main
+
+import "fmt"
+
+type ai interface {
+    showa()
+}
+
+type bi interface {
+    showb()
+}
+
+type a struct {
+    a int
+}
+
+func (a a) showa() {
+    fmt.Println(a.a)
+}
+
+func (a a) showb() {
+    fmt.Println(a.a)
+}
+
+type b struct {
+    b int
+}
+
+func (b b) showa() {
+    fmt.Println(b.b)
+}
+
+func (b b) showb() {
+    fmt.Println(b.b)
+}
+
+func main() {
+    var aa ai = a{a: 1}
+    var bempty interface{} = b{b: 1}
+    fmt.Println(aa == bempty)
+    var aempty interface{} = a{a: 1}
+    fmt.Println(aa == aempty)
+}
+
+            </code></pre>
+
+            <p>输出结果为：</p>
+            <pre><code>
+false
+true
+            </code></pre>
+            <p>这是因为，此时bempty是空接口类型其对应的实际类型是b值为1，aempty是空接口类型其对应的实际类型是a值为1。他们和aa比较都不会报错，因为空接口类型可以和任何一个值比较（不论是接口值还是实际类型值）。
+            </p>
+            <p>由于bempty和aa的实际类型不同，即使值一样也会返回false，相反aempty和aa的实际类型相同，所以返回true。</p>
+            <p>所以可见，接口之间的比较不仅仅要比较接口类型，也要比较实际类型和实际值。当然空接口是个特例，它和任何东西都能比较。</p>
+            <p>例子：</p>
+            <pre><code>
+func main() {
+    var a = 1
+    var b interface{} = func() {
+        fmt.Println("aaa")
+    }
+    fmt.Println(a == b)
+}
+            </code></pre>
+            <p>输出结果为：</p>
+            <pre><code>
+false
+            </code></pre>
+            <p>可以看出，虽然结果是显而易见的false，但是这个比较却并没有报错！</p>
+            <p>值得注意的是，接口之间虽然可以比较是否相等，但是却不能比较大小。</p>
+            <h3>接口和类型之间比较</h3>
+            <p>接口和类型之间的比较，会把类型赋值给interface{}空接口后执行两个接口的比较。进而就转化为了实现类型的类型与数值比较。</p>
+            <p>例如：</p>
+            <pre><code>
+package main
+
+import "fmt"
+
+type ai interface {
+    showa()
+}
+
+type a struct {
+    a int
+}
+
+func (a a) showa() {
+    fmt.Println(a.a)
+}
+
+func main() {
+    var a1 ai = a{a: 1}
+    var a2 = a{a: 1}
+    var a3 = 1
+
+    fmt.Println(a1 == a2)
+    fmt.Println(a1 == a3)
+}
+            </code></pre>
+            <p>输出结果为：</p>
+            <pre><code>
+true
+false
+            </code></pre>
+            <p>可以看出，a1和a2的实际类型和实际值都相同，所以返回true。</p>
+            <p>a1和a3的实际类型和实际值不同，所以返回false。</p>
+        </section>
 
 
     </main>
