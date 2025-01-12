@@ -307,6 +307,140 @@ func main() {
             <p>又一次印证，for range 生成的临时数组和原数组是共用一个底层数组的，所以改变值会影响原数组。</p>
         </section>
 
+        <section id="pointers">
+            <h1>Go语言的三种指针类型</h1>
+            <p>大家都知道go语言有指针类型可以指向变量的内存地址。</p>
+            <p>但是go语言有三种指针类型，分别是：</p>
+            <p>
+            <ul>
+                <li>
+                    <p>普通指针类型</p>
+                </li>
+                <li>
+                    <p>unsafe.Pointer</p>
+                </li>
+                <li>
+                    <p>uintptr</p>
+                </li>
+            </ul>
+            </p>
+            <p>他们有各自的区别和使用场景。</p>
+            <h2>普通指针类型</h2>
+            <p>普通指针类型就是我们常用的*int，*string等。</p>
+            <ol>
+                <li>
+                    <p>用于传递对应类型对象的地址，不能进行指针运算。</p>
+                </li>
+                <li>
+                    <p>可以访问内存的值。</p>
+                </li>
+                <li>
+                    <p>只能在底层类型一样的指针之间进行类型转化。</p>
+                </li>
+                <li>
+                    <p>指向的内容不会被GC回收。</p>
+                </li>
+            </ol>
+            <p>第三点可能不好理解，举个例子：</p>
+            <pre><code>
+package main
+
+import (
+    "fmt"
+)
+
+type myint int
+
+func main() {
+    var a myint = 1
+    ap := &a
+    fmt.Println(*ap)
+    var app *int
+    app = (*int)(ap)
+    fmt.Println(*app)
+}
+            </code></pre>
+            <p>这段代码中ap的静态类型是*myint，app的静态类型是*int，所以虽然ap和app的底层类型都是int，但是他们的静态类型不同，必须进行类型转化后才能赋值。</p>
+            <p>但是如果二者的底层类型不一样，就完全不能赋值。</p>
+            <p>举个例子：</p>
+            <pre><code>
+package main
+
+import (
+    "fmt"
+)
+
+type myint int
+
+func main() {
+    var a myint = 1
+    ap := &a
+    fmt.Println(*ap)
+    var app *float64
+    app = (*float64)(ap)
+    fmt.Println(*app)
+}
+
+            </code></pre>
+            <p>这段代码会报错，因为底层类型不一样，不能进行类型转化。</p>
+            <h2>unsafe.Pointer</h2>
+            <p>unsafe.Pointer是go语言的通用指针类型，可以指向任何类型的内存地址。</p>
+            <ol>
+                <li>
+                    <p>可以保存任何类型对象的地址，不能进行指针运算。</p>
+                </li>
+                <li>
+                    <p>不能访问内存的值。</p>
+                </li>
+                <li>
+                    <p>用于底层类型不同的指针之间的类型转化。</p>
+                </li>
+                <li>
+                    <p>指向的内容不会被GC回收。</p>
+                </li>
+            </ol>
+            <p>第三点其实指的是，如果你非要把两个指向完全不同底层类型的指针相互赋值的话，就需要用unsafe.Pointer来做中间桥梁。</p>
+            <p>例如，上面说到的普通类型指针会报错的代码可以这样改写：</p>
+            <pre><code>
+package main
+
+import (
+    "fmt"
+    "unsafe"
+)
+
+type myint int
+
+func main() {
+    var a myint = 1
+    ap := &a
+    fmt.Println(*ap)
+    var app *float64
+    app = (*float64)(unsafe.Pointer(ap))
+    fmt.Println(*app)
+}
+            </code></pre>
+            <p>可以看到通过unsafe.Pointer的转化就可以将一个int类型作为底层的指针赋值给float64类型的指针。</p>
+            <p>请注意，其余的三个特点也非常重要，这是unsafe.Pointer与普通类型指针和uintptr的主要区别。</p>
+            <h2>uintptr</h2>
+            <P>很多人以为uintptr是指针，其实不然，它不过是一个uint，和指针类型的大小相等罢了，它是用来指针运算的工具。</P>
+            <ol>
+                <li>
+                    <p>可以和unsafe.Pointer相互转化，可以进行指针运算。</p>
+                </li>
+                <li>
+                    <p>不可以访问内存的值。</p>
+                </li>
+                <li>
+                    <P>不算指针，自然不存在所谓的指针类型转化，它就是一个整数类型。</P>
+                </li>
+                <li>
+                    <p>指向的内容会被GC回收。</p>
+                </li>
+            </ol>
+            <p>所以其实uintptr就是一个和指针大小相等的整数类型。可以进行指针运算，并且不能持有对象，指向的内容会被回收。</p>
+        </section>
+
 
 
     </main>
@@ -321,7 +455,7 @@ func main() {
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-08 20:21:48</p>
+        <p>最后编辑时间: 2025-01-12 12:24:54</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
