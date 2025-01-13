@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="priority" content="normal">
+    <meta name="description" content="力扣hot100题集，所有个人题解汇总。">
+    <meta name="keywords" content="力扣, 算法, 面试, 字节, hot100, 刷题, 题解">
+    <meta name="author" content="橙子">
+    <title>HOT100 题解汇总</title>
+    <link rel="stylesheet" href="../css/article.css">
+    <link rel="stylesheet" href="../css/beian.css">
+    <link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <header>
+        <h1>HOT100 题解汇总</h1>
+    </header>
+    <main>
+        <nav>
+            <h2>目录</h2>
+            <ul>
+                <li><a href="#两数之和">两数之和</a></li>
+                <li><a href="#字母异位词分组">字母异位词分组</a></li>
+                <li><a href="#最长连续序列">最长连续序列</a></li>
+                <li><a href="#移动零">移动零</a></li>
+                <li><a href="#盛最多水的容器">盛最多水的容器</a></li>
+                <li><a href="#三数之和">三数之和</a></li>
+            </ul>
+        </nav>
+        <p class="article-intro">本文汇总了本人刷hot100的所有题解和心得包括源代码。</p>
+        <p class="article-intro">本文会持续更新，直到刷完hot100。</p>
+        <section id="两数之和">
+            <h1>两数之和</h1>
+            <p><a href="https://leetcode.cn/problems/two-sum/" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题还是很简单的，有多种解法。</p>
+            <p>解法：</p>
+            <ol>
+                <li>暴力解法，两层for循环，时间复杂度O(n^2)，空间复杂度O(1)</li>
+                <li>哈希表，时间复杂度O(n)，空间复杂度O(n)</li>
+                <li>双指针，时间复杂度O(nlogn)，空间复杂度O(1)</li>
+            </ol>
+            <p>针对这道题，我们可以知道，如果答案存在，那么一定会是某两个数的和，于是我们只需要针对每一个数nums[i]，都尝试在整个数组中寻找target-nums[i]，如果找到了，那么就返回这两个数的索引。</p>
+            <p>于是问题就变成了，如何快速查找target-nums[i]。</p>
+            <p>最直接的想法就是针对每一个数都遍历一遍数组（注意需要跳过自己），但是这样时间复杂度是O(n^2)，显然不合适。</p>
+            <p>于是我们想到了哈希表，哈希表的查找时间复杂度是O(1)，所以我们可以将数组中的每一个数都存入哈希表中，然后针对每一个数nums[i]，都查找哈希表中是否存在target-nums[i]，如果存在，那么就返回这两个数的索引。
+            </p>
+            <p>但是我们如何在哈希表做法中跳过当前已经选择的元素呢？</p>
+            <p>答案是，我们可以以每个元素为key其索引为value，每次找到了target-nums[i]的时候就检查一下索引是否和当前选择的元素的索引相同即可。这样也方便返回索引。</p>
+            <p>如果你不想这么麻烦的排除重复使用一个元素的情况，那么就可以使用双指针做法。</p>
+            <p>双指针做法的思路是，首先将数组排序，然后使用两个指针，一个指向数组的开头，一个指向数组的末尾，然后每次比较两个指针指向的元素的和是否等于target，如果等于，那么就返回这两个元素的索引，如果小于target，那么就移动左指针，如果大于target，那么就移动右指针。
+            </p>
+            <p>但是这样返回的索引是排序后的索引，而不是原数组的索引，所以需要再遍历一遍数组，找到原数组的索引。</p>
+            <p>双指针做法的时间复杂度是O(nlogn)，空间复杂度是O(1)。</p>
+            <p>这里给出哈希表解法的Go代码：</p>
+            <pre><code>
+func twoSum(nums []int, target int) []int {
+    mapIndex := make(map[int]int)
+    for i, v := range nums {
+        mapIndex[v] = i
+    }
+    ans := make([]int, 2)
+    for i, num := range nums {
+        if anst, ok := mapIndex[target-num]; ok {
+            if anst == i {
+                continue
+            }
+            ans[0] = anst
+            ans[1] = i
+            break
+        }
+    }
+    return ans
+}
+
+            </code></pre>
+        </section>
+        <section id="字母异位词分组">
+            <h1>字母异位词分组</h1>
+            <p><a href="https://leetcode.cn/problems/group-anagrams/" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>首先搞明白什么是字母异位词：字母异位词是指两个字符串，它们包含的字母相同，但是字母的顺序不同。</p>
+            <p>那么如何判断两个词是字母异味词？很简单，排序！字母异位词排序后是相同的。</p>
+            <p>于是这道题的思路就很清晰了，我们只需要将每个字符串排序后，然后存入哈希表中，如果哈希表中已经存在这个排序后的字符串，那么就说明这两个字符串是字母异味词，然后将这两个字符串存入同一个列表中。</p>
+            <p>最后返回哈希表中的所有列表即可。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+import (
+    "sort"
+)
+
+func groupAnagrams(strs []string) [][]string {
+    var mapp map[string][]string
+    mapp = make(map[string][]string)
+    for _, str := range strs {
+        chars := []rune(str)
+        sort.Slice(chars, func(i, j int) bool {
+            return chars[i] < chars[j]
+        })
+        strTemp := string(chars)
+        mapp[strTemp] = append(mapp[strTemp], str)
+    }
+    var ans [][]string
+    for _, val := range mapp {
+        ans = append(ans, val)
+    }
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="最长连续序列">
+            <h1>最长连续序列</h1>
+            <p><a href="https://leetcode.cn/problems/longest-consecutive-sequence" target="_blank"
+                    rel="noreferrer">题目链接</a></p>
+            <p>这道题不难，但是它要求在O(n)来实现，所以我就不能简单的排序后遍历一遍，那样时间复杂度是O(nlogn)。</p>
+            <p>所以思考，如何判断一个数是连续序列的一部分？很简单，如果它-1或者+1在数组中，那么它就是连续序列的一部分。</p>
+            <p>于是我们可以使用一个哈希表来存储数组中的每一个数，然后遍历数组，对于每一个数，我们都检查它-1和+1是否在哈希表中，如果在，那么就说明这个数是连续序列的一部分。</p>
+            <p>但是，说到这里，也只说了基础思路，在此基础上如何获得最长序列长度？</p>
+            <p>想要获得最长序列长度，就要知道有序的序列起始位置在哪，起始位置有什么特点呢？那就是它-1不在数组中。</p>
+            <p>所以，我们可以遍历数组，对于每一个数，我们都检查它-1是否在哈希表中，如果不在，那么就说明这个数是连续序列的起始位置。</p>
+            <p>进一步我们可以从起始位置开始，向右遍历，直到遇到一个数+1不在哈希表中，那么就说明这个数是连续序列的结束位置。</p>
+            <p>然后，我们就可以更新最长序列长度。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func longestConsecutive(nums []int) int {
+    set := make(map[int]struct{})
+    for _, num := range nums {
+        set[num] = struct{}{}
+    }
+    ans := 0
+
+    for num := range set {
+        if _, ok := set[num-1]; ok {
+            continue
+        }
+        ansTmp := 1
+        for {
+            if _, ok := set[num+1]; ok {
+                num++
+                ansTmp++
+            } else {
+                break
+            }
+        }
+        if ansTmp > ans {
+            ans = ansTmp
+        }
+    }
+    return ans
+}
+            </code></pre>
+            <p>这段代码中有一个需要注意的地方，那就是必须要遍历哈希表，而不是遍历数组，因为数组中可能存在重复的元素，而哈希表中不存在重复的元素，这样就可以避免重复计算，否则你会有一个测试用例过不去。</p>
+        </section>
+        <section id="移动零">
+            <h1>移动零</h1>
+            <p><a href="https://leetcode.cn/problems/move-zeroes" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题也很简单，题目要求将数组中的0移动到数组的末尾，同时保持非零元素的相对顺序。</p>
+            <p>唯一需要注意的点是要保持顺序，并且不能新开数组。</p>
+            <p>显而易见的一个思路：遍历数组，直到遇到0，从当前节点向后遍历数组，找到第一个非零元素，然后交换这两个元素。</p>
+            <p>但是这样的时间复杂度有点高。因为你每次都遍历数组，时间复杂度是O(n^2)。</p>
+            <p>于是我们可以用双指针来优化。i指向第一个为0的位置，j指向从i开始第一个非零元素的位置。</p>
+            <p>先移动i，直到遇到0，然后移动j，满足j&gti&&nums[j]!=0&&j&ltlen(nums)，然后交换nums[i]和nums[j]。</p>
+            <p>由于j保存了上次找到的非零元素的位置，所以j不需要每次都从i开始遍历，只需要从j开始寻找即可，所以时间消耗会少。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func moveZeroes(nums []int) {
+    i, j := 0, 0
+    for i < len(nums) {
+        if nums[i] == 0 {
+            for j < len(nums) && (j < i || nums[j] == 0) {
+                j++
+            }
+            if j < len(nums) {
+                nums[i], nums[j] = nums[j], nums[i]
+            }
+        }
+        i++
+    }
+}
+            </code></pre>
+        </section>
+        <section id="盛最多水的容器">
+            <h1>盛最多水的容器</h1>
+            <p><a href="https://leetcode.cn/problems/container-with-most-water" target="_blank"
+                    rel="noreferrer">题目链接</a>
+            </p>
+            <p>这道题的目的是找到两个线段之间可以容纳的最大水量。给定一个长度为n的数组height，height[i]表示第i个线段的高度。我们可以想象成每个线段都是一个容器壁，线段之间可以容纳水。我们的目标是找到两个线段之间可以容纳的最大水量。
+            </p>
+            <p>这个问题的关键是如何找到这两个线段。我们可以使用双指针的方法，从两端开始向中间移动，计算每次移动时的水量，并记录最大水量。移动的策略是，如果左边的线段高度小于右边的线段高度，则移动左边的指针，反之移动右边的指针。这样可以确保每次移动都有可能找到更大的水量。
+            </p>
+            <p>你可能会疑惑为什么每次要移动小的那个线段指针？你可以想一下，每次的盛水容量都是由宽度和最小的线段决定的，所以如果移动大的那个线段指针，那么宽度就会减小，而最小线段的高度不会变，也就是说高度不可能变高，只可能变小，而宽度也一定减小，所以如果移动高的线段，结果一定更差。
+            </p>
+            <p>而如果移动的是较小的那个线段，虽然结果不一定会变大，但是至少有概率变大。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func maxArea(height []int) int {
+    i, j := 0, len(height)-1
+    ans := 0
+    for i < j {
+        width := j - i
+        high := min(height[i], height[j])
+        if width*high > ans {
+            ans = width * high
+        }
+        if height[i] == high {
+            i++
+        } else {
+            j--
+        }
+    }
+    return ans
+}
+
+func min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
+}
+            </code></pre>
+        </section>
+        <section id="三数之和">
+            <h1>三数之和</h1>
+            <p><a href="https://leetcode.cn/problems/3sum" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题其实是二数之和的拓展。</p>
+            <p>实际上这道题的做法受东哥(labuladong)启发，其思路其实是先排序，对于每一个数，都尝试在后面的数组中寻找和为0-nums[i]的二数之和，如果找到了，那么就返回这三个数。</p>
+            <p>思路很简单，但是这道题的难点在于去重。本题有多个答案，并且数组中会有重复元素，所以需要在之前的二数之和的基础上进行更新：由于我们这次返回的是数字而非索引，所以我们可以大胆的使用双指针做法，并且双指针更利于去重。具体思路是，在排序好的数组中左右两个指针向中间移动，如果遇到重复元素，那么就跳过。这样就可以保证在二数和部分不会有重复内容。
+            </p>
+            <p>但是在三数和中还是会重复，例如这个用例：[-1,0,1,2,-1,-4]，排序后是[-4,-1,-1,0,1,2]。当选择的第一个数是-1的时候，去找和为1的二数和，得到的结果是[2,-1]和[0,1]，最终结果就是[-1,2,-1]和[-1,0,1]，但是如果后面我们选择到了2的话还是会得到[-1,2,-1]这个结果。这就重复了。
+            </p>
+            <p>如何解决这种重复呢？答案很简单每次找二数和的时候都只考虑当前数字后面的数组，这是因为如果整个流程按照之前的思路考虑剩下的所有数组的话，那么在选择-1的时候会考虑2，在选择2的时候会考虑-1，而2和-1同时出现的情况之前选择-1的时候就考虑过了，这就会导致重复。为了避免这种重复，我们就从当前数字的后面开始找二数和。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func threeSum(nums []int) [][]int {
+    sort.Slice(nums, func(i, j int) bool {
+        return nums[i] < nums[j]
+    })
+    fmt.Println(nums)
+    ans := make([][]int, 0)
+    for i := 0; i < len(nums); {
+        numstmp := make([]int, len(nums))
+        copy(numstmp, nums)
+        anstwo := twoSum(numstmp[i+1:], 0-nums[i])
+        for _, s := range anstwo {
+            anstmp := make([]int, 3)
+            anstmp[0] = nums[i]
+            anstmp[1] = s[0]
+            anstmp[2] = s[1]
+            ans = append(ans, anstmp)
+        }
+        numtmp := nums[i]
+        for i < len(nums) && nums[i] == numtmp {
+            i++
+        }
+    }
+    return ans
+}
+
+func twoSum(nums []int, target int) [][]int {
+    ans := make([][]int, 0)
+    i, j := 0, len(nums)-1
+    for i < j {
+        tmp := nums[i] + nums[j]
+        if tmp < target {
+            tmpi := nums[i]
+            for i < len(nums) && nums[i] == tmpi {
+                i++
+            }
+        } else if tmp > target {
+            tmpj := nums[j]
+            for j > 0 && nums[j] == tmpj {
+                j--
+            }
+        } else {
+            ansTmp := make([]int, 2)
+            ansTmp[0] = nums[i]
+            ansTmp[1] = nums[j]
+            tmpi := nums[i]
+            for i < len(nums) && nums[i] == tmpi {
+                i++
+            }
+            tmpj := nums[j]
+            for j > 0 && nums[j] == tmpj {
+                j--
+            }
+            ans = append(ans, ansTmp)
+        }
+    }
+    return ans
+}
+
+            </code></pre>
+        </section>
+    </main>
+    <footer class="beian-footer">
+        <div class="beian-info">
+            <img src="../images/备案图标.png" alt="备案图标" class="beian-icon">
+            <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer"
+                target="_blank">鄂公网安备 42011102005555 </a>
+            <span class="spacer"> </span>
+            <a href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank"
+                class="icp-beian">青ICP备2024002362号-1 </a>
+        </div>
+    </footer>
+    <footer class="last-edit">
+        <p>最后编辑时间: 2025-01-13 16:56:21</p>
+    </footer>
+    <script src="../js/article.js"></script>
+</body>
+
+</html>
