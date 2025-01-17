@@ -16,35 +16,55 @@
 </head>
 
 <body>
-    <header>
-        <h1>橙 子 果 园</h1>
-        <div class="header-icons">
-            <a href="mailto:Jin0714@outlook.com" class="icon email-icon" title="发送邮件">
-                <i class="fa-solid fa-envelope"></i>
-            </a>
-            <a href="https://github.com/oorangeeee" class="icon github-icon" target="_blank" title="访问我的 GitHub">
-                <i class="fa-brands fa-github"></i>
-            </a>
+    <div class="sidebar-toggle">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>栏目导航</h3>
+            <button class="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-    </header>
-    <main>
-        <section id="articles">
-            <!-- 文章链接将由JavaScript动态生成 -->
-        </section>
-    </main>
-    <script src="js/main.js"></script>
-    <footer class="beian-footer">
-        <div class="beian-info">
-            <img src="./images/备案图标.png" alt="备案图标" class="beian-icon">
-            <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer" target="_blank">
-                鄂公网安备 42011102005555
-            </a>
-            <span class="spacer"> </span>
-            <a href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank" class="icp-beian">
-                青ICP备2024002362号-1
-            </a>
-        </div>
-    </footer>
+        <nav id="column-list">
+            <!-- 栏目列表将由JavaScript动态生成 -->
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>橙 子 果 园</h1>
+            <div class="header-icons">
+                <a href="mailto:Jin0714@outlook.com" class="icon email-icon" title="发送邮件">
+                    <i class="fa-solid fa-envelope"></i>
+                </a>
+                <a href="https://github.com/oorangeeee" class="icon github-icon" target="_blank" title="访问我的 GitHub">
+                    <i class="fa-brands fa-github"></i>
+                </a>
+            </div>
+        </header>
+        <main>
+            <section id="articles">
+                <!-- 文章链接将由JavaScript动态生成 -->
+            </section>
+        </main>
+        <script src="js/main.js"></script>
+        <footer class="beian-footer">
+            <div class="beian-info">
+                <img src="./images/备案图标.png" alt="备案图标" class="beian-icon">
+                <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer"
+                    target="_blank">
+                    鄂公网安备 42011102005555
+                </a>
+                <span class="spacer"> </span>
+                <a href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank"
+                    class="icp-beian">
+                    青ICP备2024002362号-1
+                </a>
+            </div>
+        </footer>
+    </div>
 </body>
 
 </html>

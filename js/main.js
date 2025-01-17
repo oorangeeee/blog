@@ -1,68 +1,160 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const topArticles = []; // 置顶文章队列
-    const normalArticles = []; // 普通文章队列
+    let currentColumn = '主页';
+    const topArticles = [];
+    const normalArticles = [];
 
-    // 获取 HTML 文件列表
-    const response = await fetch('../html/filelist.json');
-    const fileList = await response.json();
-    console.log('File list:', fileList);
+    // 专栏配置
+    const columns = [
+        {
+            name: '主页',
+            isHome: true // 特殊标记主页
+        },
+        {
+            name: '技术',
+            filesPath: 'technical_files.json'
+        },
+        {
+            name: '生活',
+            filesPath: 'life_files.json'
+        },
+        {
+            name: '游戏',
+            filesPath: 'game_files.json'
+        }
+    ];
 
-    for (const file of fileList) {
-        const res = await fetch(`../html/${file}`);
-        const text = await res.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, 'text/html');
+    // 侧边栏控制
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const closeButton = document.querySelector('.close-sidebar');
 
-        // 获取文章标题
-        const title = doc.querySelector('head > title').textContent;
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        mainContent.classList.add('shifted');
+    });
 
-        // 获取最后编辑时间
-        const lastEditedMatch = doc.querySelector('body > footer.last-edit > p').textContent.match(/最后编辑时间: ([\d-]+\s[\d:]+)/);
-        const lastEdited = lastEditedMatch ? lastEditedMatch[1] : null;
+    closeButton.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        mainContent.classList.remove('shifted');
+    });
 
-        // 获取优先级（priority 元数据）
-        const priorityMeta = doc.querySelector('meta[name="priority"]');
-        const priority = priorityMeta ? priorityMeta.getAttribute('content') : 'normal';
+    // 点击侧边栏外区域关闭侧边栏
+    document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) &&
+            !sidebarToggle.contains(e.target) &&
+            sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            mainContent.classList.remove('shifted');
+        }
+    });
 
-        if (lastEdited) {
-            const articleData = { title, lastEdited, link: `html/${file}`, priority };
+    // 加载栏目列表
+    const columnList = document.getElementById('column-list');
+    columns.forEach(column => {
+        const columnItem = document.createElement('a');
+        columnItem.className = 'column-item';
+        columnItem.textContent = column.name;
+        columnItem.href = '#';
+        if (column.name === currentColumn) {
+            columnItem.classList.add('active');
+        }
 
-            // 根据优先级将文章加入不同的队列
-            if (priority === 'top') {
-                topArticles.push(articleData);
-            } else {
-                normalArticles.push(articleData);
+        columnItem.addEventListener('click', async (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.column-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            columnItem.classList.add('active');
+            currentColumn = column.name;
+            await loadArticles(column);
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                mainContent.classList.remove('shifted');
+            }
+        });
+
+        columnList.appendChild(columnItem);
+    });
+
+    // 加载文章列表
+    async function loadArticles(column) {
+        topArticles.length = 0;
+        normalArticles.length = 0;
+
+        let fileList = [];
+        if (column.isHome) {
+            // 加载所有栏目的文章
+            const allColumnFiles = columns
+                .filter(col => !col.isHome)
+                .map(col => fetch(`../html/${col.filesPath}`));
+
+            const responses = await Promise.all(allColumnFiles);
+            const jsonResults = await Promise.all(responses.map(res => res.json()));
+            fileList = jsonResults.flat();
+        } else {
+            // 加载特定栏目的文章
+            const response = await fetch(`../html/${column.filesPath}`);
+            fileList = await response.json();
+        }
+
+        // 处理文章列表
+        for (const file of fileList) {
+            const res = await fetch(`../html/${file}`);
+            const text = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+
+            // 获取文章标题
+            const title = doc.querySelector('head > title').textContent;
+
+            // 获取最后编辑时间
+            const lastEditedMatch = doc.querySelector('body > footer.last-edit > p').textContent.match(/最后编辑时间: ([\d-]+\s[\d:]+)/);
+            const lastEdited = lastEditedMatch ? lastEditedMatch[1] : null;
+
+            // 获取优先级（priority 元数据）
+            const priorityMeta = doc.querySelector('meta[name="priority"]');
+            const priority = priorityMeta ? priorityMeta.getAttribute('content') : 'normal';
+
+            if (lastEdited) {
+                const articleData = { title, lastEdited, link: `html/${file}`, priority };
+
+                // 根据优先级将文章加入不同的队列
+                if (priority === 'top') {
+                    topArticles.push(articleData);
+                } else {
+                    normalArticles.push(articleData);
+                }
             }
         }
+
+        // 排序置顶文章队列：按时间倒序（越新越靠上）
+        topArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
+
+        // 排序普通文章队列：按时间倒序（越新越靠上）
+        normalArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
+
+        console.log('Sorted top articles:', topArticles);
+        console.log('Sorted normal articles:', normalArticles);
+
+        // 清空并重新渲染文章列表
+        const articlesContainer = document.getElementById('articles');
+        articlesContainer.innerHTML = '';
+
+        topArticles.forEach(article => {
+            const articleLink = createArticleElement(article);
+            articlesContainer.appendChild(articleLink);
+        });
+
+        normalArticles.forEach(article => {
+            const articleLink = createArticleElement(article);
+            articlesContainer.appendChild(articleLink);
+        });
     }
 
-    // 排序置顶文章队列：按时间倒序（越新越靠上）
-    topArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
-
-    // 排序普通文章队列：按时间倒序（越新越靠上）
-    normalArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
-
-    console.log('Sorted top articles:', topArticles);
-    console.log('Sorted normal articles:', normalArticles);
-
-    // 渲染文章到页面
-    const articlesContainer = document.getElementById('articles');
-    articlesContainer.style.display = 'flex';
-    articlesContainer.style.flexDirection = 'column';
-    articlesContainer.style.alignItems = 'center';
-    articlesContainer.style.justifyContent = 'center';
-
-    // 渲染置顶文章
-    topArticles.forEach(article => {
-        const articleLink = createArticleElement(article);
-        articlesContainer.appendChild(articleLink);
-    });
-
-    // 渲染普通文章
-    normalArticles.forEach(article => {
-        const articleLink = createArticleElement(article);
-        articlesContainer.appendChild(articleLink);
-    });
+    // 初始加载主页文章
+    await loadArticles(columns[0]);
 });
 
 function createArticleElement(article) {
