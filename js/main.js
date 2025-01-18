@@ -29,29 +29,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mainContent = document.querySelector('.main-content');
     const closeButton = document.querySelector('.close-sidebar');
 
-    sidebarToggle.addEventListener('click', () => {
+    sidebarToggle.addEventListener('click', (e) => {
+        e.stopPropagation(); // 阻止事件冒泡
         sidebar.classList.add('active');
         mainContent.classList.add('shifted');
         sidebarToggle.style.opacity = '0';
         sidebarToggle.style.pointerEvents = 'none';
     });
 
-    closeButton.addEventListener('click', () => {
+    closeButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // 阻止事件冒泡
+        closeSidebar();
+    });
+
+    // 抽取关闭侧边栏的逻辑为单独函数
+    function closeSidebar() {
         sidebar.classList.remove('active');
         mainContent.classList.remove('shifted');
         sidebarToggle.style.opacity = '1';
         sidebarToggle.style.pointerEvents = 'auto';
-    });
+    }
 
     // 点击侧边栏外区域关闭侧边栏
     document.addEventListener('click', (e) => {
         if (!sidebar.contains(e.target) &&
             !sidebarToggle.contains(e.target) &&
             sidebar.classList.contains('active')) {
-            sidebar.classList.remove('active');
-            mainContent.classList.remove('shifted');
-            sidebarToggle.style.opacity = '1';
-            sidebarToggle.style.pointerEvents = 'auto';
+            closeSidebar();
         }
     });
 
@@ -70,6 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         columnItem.addEventListener('click', async (e) => {
+            e.stopPropagation(); // 阻止事件冒泡
             e.preventDefault();
             document.querySelectorAll('.column-item').forEach(item => {
                 item.classList.remove('active');
@@ -79,10 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadArticles(column);
 
             if (window.innerWidth <= 768) {
-                sidebar.classList.remove('active');
-                mainContent.classList.remove('shifted');
-                sidebarToggle.style.removeProperty('opacity');
-                sidebarToggle.style.removeProperty('pointerEvents');
+                closeSidebar();
             }
         });
 
