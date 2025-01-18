@@ -39,8 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     closeButton.addEventListener('click', () => {
         sidebar.classList.remove('active');
         mainContent.classList.remove('shifted');
-        sidebarToggle.style.opacity = '1';
-        sidebarToggle.style.pointerEvents = 'auto';
     });
 
     // 点击侧边栏外区域关闭侧边栏
@@ -50,8 +48,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             sidebar.classList.contains('active')) {
             sidebar.classList.remove('active');
             mainContent.classList.remove('shifted');
-            sidebarToggle.style.opacity = '1';
-            sidebarToggle.style.pointerEvents = 'auto';
         }
     });
 

@@ -235,8 +235,9 @@ nav ul li a:hover {
 /* 适配移动端 */
 @media screen and (max-width: 600px) {
     nav {
-        width: 95%;
+        width: 90%;
         padding: 1rem;
+        margin: 1rem auto;
     }
 
     nav ul li a {
