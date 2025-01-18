@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             sidebar.classList.contains('active')) {
             sidebar.classList.remove('active');
             mainContent.classList.remove('shifted');
+            sidebarToggle.style.opacity = '1';
+            sidebarToggle.style.pointerEvents = 'auto';
         }
     });
 
@@ -77,6 +79,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (window.innerWidth <= 768) {
                 sidebar.classList.remove('active');
                 mainContent.classList.remove('shifted');
+                sidebarToggle.style.removeProperty('opacity');
+                sidebarToggle.style.removeProperty('pointerEvents');
             }
         });
 
@@ -170,8 +174,8 @@ function createArticleElement(article) {
     articleLink.style.textDecoration = 'none'; // 去掉默认下划线
     articleLink.style.color = 'inherit'; // 继承颜色，避免文字颜色变化
     articleLink.style.display = 'block'; // 将链接设置为块级元素，包裹整个标签
-    articleLink.style.width = 'clamp(70%, 95vw, 900px)'; // 宽度动态调整，最小 70%，最大 900px
-    articleLink.style.margin = '1rem 0'; // 每个标签间增加间距
+    articleLink.style.width = 'min(900px, 95%)'; // 修改宽度设置，确保移动端不会溢出
+    articleLink.style.margin = '1rem auto'; // 使用 auto 实现水平居中
 
     // 内层标签
     const articleElement = document.createElement('div');
