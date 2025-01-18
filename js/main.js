@@ -32,11 +32,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     sidebarToggle.addEventListener('click', () => {
         sidebar.classList.add('active');
         mainContent.classList.add('shifted');
+        sidebarToggle.style.opacity = '0';
+        sidebarToggle.style.pointerEvents = 'none';
     });
 
     closeButton.addEventListener('click', () => {
         sidebar.classList.remove('active');
         mainContent.classList.remove('shifted');
+        sidebarToggle.style.opacity = '1';
+        sidebarToggle.style.pointerEvents = 'auto';
     });
 
     // 点击侧边栏外区域关闭侧边栏
@@ -46,6 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             sidebar.classList.contains('active')) {
             sidebar.classList.remove('active');
             mainContent.classList.remove('shifted');
+            sidebarToggle.style.opacity = '1';
+            sidebarToggle.style.pointerEvents = 'auto';
         }
     });
 
@@ -56,6 +62,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         columnItem.className = 'column-item';
         columnItem.textContent = column.name;
         columnItem.href = '#';
+        if (column.isHome) {
+            columnItem.setAttribute('data-is-home', 'true');
+        }
         if (column.name === currentColumn) {
             columnItem.classList.add('active');
         }
