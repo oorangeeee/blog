@@ -39,6 +39,10 @@
                 <li><a href="#轮转数组">轮转数组</a></li>
                 <li><a href="#除自身以外数组的乘积">除自身以外数组的乘积</a></li>
                 <li><a href="#缺失的第一个正整数">缺失的第一个正整数</a></li>
+                <li><a href="#矩阵置零">矩阵置零</a></li>
+                <li><a href="#螺旋矩阵">螺旋矩阵</a></li>
+                <li><a href="#旋转图像">旋转图像</a></li>
+                <li><a href="#搜索二维矩阵II">搜索二维矩阵II</a></li>
             </ul>
         </nav>
         <p class="article-intro">声明：本文题解所有代码都是本人编写，但由于本人能力有限，故解题思路大多参考和阅读他人文档，如果本文有侵权行为，请及时联系我删除。</p>
@@ -774,6 +778,134 @@ func firstMissingPositive(nums []int) int {
 }
             </code></pre>
         </section>
+        <section id="矩阵置零">
+            <h1>矩阵置零</h1>
+            <p><a href="https://leetcode.cn/problems/set-matrix-zeroes" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>很简单的题目，用一个二维切片存下所有的0的位置，然后遍历这个切片，将0所在的行和列全部置零。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func setZeroes(matrix [][]int) {
+    zero := make([][]int, 0)
+    for i := 0; i < len(matrix); i++ {
+        for j := 0; j < len(matrix[i]); j++ {
+            if matrix[i][j] == 0 {
+                zero = append(zero, []int{i, j})
+            }
+        }
+    }
+    for _, tmp := range zero {
+        row := tmp[0]
+        col := tmp[1]
+        for i := 0; i < len(matrix[row]); i++ {
+            matrix[row][i] = 0
+        }
+        for j := 0; j < len(matrix); j++ {
+            matrix[j][col] = 0
+        }
+    }
+}
+            </code></pre>
+        </section>
+        <section id="螺旋矩阵">
+            <h1>螺旋矩阵</h1>
+            <p><a href="https://leetcode.cn/problems/spiral-matrix" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>其实是一个模拟题，用四个变量表示上下左右边界，然后按照顺时针方向遍历矩阵，每次遍历完一行或一列，就更新边界。</p>
+            <p>具体思路就是纯粹的模拟。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func spiralOrder(matrix [][]int) []int {
+    i, j := 0, 0
+    n, m := len(matrix), len(matrix[0])
+    ans := make([]int, n*m)
+    p := 0
+    length := n * m
+    begin1, end1 := 0, n
+    begin2, end2 := 0, m
+    for p < length {
+        for j := begin2; j < end2 && p < length; j++ {
+            ans[p] = matrix[i][j]
+            p++
+        }
+        j--
+        i++
+        for i < end1 && p < length {
+            ans[p] = matrix[i][j]
+            i++
+            p++
+        }
+        i--
+        j--
+        for j >= begin2 && p < length {
+            ans[p] = matrix[i][j]
+            j--
+            p++
+        }
+        j++
+        i--
+        for i >= begin1+1 && p < length {
+            ans[p] = matrix[i][j]
+            i--
+            p++
+        }
+        begin1++
+        begin2++
+        end1--
+        end2--
+    }
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="旋转图像">
+            <h1>旋转图像</h1>
+            <p><a href="https://leetcode.cn/problems/rotate-image" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题是一个很灵活的题，能想到就很简单，想不到就很难。</p>
+            <p>具体思路就是先转置矩阵，然后反转每一行。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func rotate(matrix [][]int) {
+    for i := 0; i < len(matrix); i++ { 
+        for j :=i; j < len(matrix[i]); j++ { 
+            matrix[i][j], matrix[j][i]=matrix[j][i], matrix[i][j] 
+        } 
+    } 
+    for i :=0; i < len(matrix); i++ { 
+        l :=0 
+        r :=len(matrix[i]) - 1 
+        for l < r { 
+            matrix[i][l], matrix[i][r]=matrix[i][r], matrix[i][l] 
+            l++ 
+            r-- 
+        } 
+    } 
+}
+            </code></pre>
+        </section>
+        <section id="搜索二维矩阵II">
+            <h1>搜索二维矩阵II</h1>
+            <p><a href="https://leetcode.cn/problems/search-a-2d-matrix-ii" target="_blank" rel="noreferrer">题目链接</a>
+            </p>
+            <p>这道题的第一思路其实是二分，但是很明显不行。</p>
+            <P>所以要设计一个高效的遍历思路，因为矩阵给出了一个很好的性质，那就是从左到右，从上到下都是递增的。</P>
+            <p>所以我们可以从矩阵的右上角开始遍历，如果当前元素大于target，则向左移动，如果当前元素小于target，则向下移动。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func searchMatrix(matrix [][]int, target int) bool {
+    i := 0
+    j := len(matrix[0]) - 1
+    for i < len(matrix) && i >= 0 && j < len(matrix[0]) && j >= 0 {
+        if matrix[i][j] < target {
+            i++
+        } else if matrix[i][j] > target {
+            j--
+        } else {
+            return true
+        }
+    }
+    return false
+}
+            </code></pre>
+        </section>
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
@@ -786,7 +918,7 @@ func firstMissingPositive(nums []int) int {
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-21 1:16:55</p>
+        <p>最后编辑时间: 2025-01-21 23:18:55</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
