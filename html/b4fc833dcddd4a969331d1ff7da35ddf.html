@@ -43,6 +43,14 @@
                 <li><a href="#螺旋矩阵">螺旋矩阵</a></li>
                 <li><a href="#旋转图像">旋转图像</a></li>
                 <li><a href="#搜索二维矩阵II">搜索二维矩阵II</a></li>
+                <li><a href="#相交链表">相交链表</a></li>
+                <li><a href="#反转链表">反转链表</a></li>
+                <li><a href="#回文链表">回文链表</a></li>
+                <li><a href="#环形链表">环形链表</a></li>
+                <li><a href="#环形链表II">环形链表II</a></li>
+                <li><a href="#合并两个有序链表">合并两个有序链表</a></li>
+                <li><a href="#两数相加">两数相加</a></li>
+                <li><a href="#删除链表的倒数第N个节点">删除链表的倒数第N个节点</a></li>
             </ul>
         </nav>
         <p class="article-intro">声明：本文题解所有代码都是本人编写，但由于本人能力有限，故解题思路大多参考和阅读他人文档，如果本文有侵权行为，请及时联系我删除。</p>
@@ -906,6 +914,405 @@ func searchMatrix(matrix [][]int, target int) bool {
 }
             </code></pre>
         </section>
+        <section id="相交链表">
+            <h1>相交链表</h1>
+            <p><a href="https://leetcode.cn/problems/intersection-of-two-linked-lists" target="_blank"
+                    rel="noreferrer">题目链接</a></p>
+            <p>这是一道技巧性的题目，可以思考一下，如果两个链表相交的话，用两个指针从两个链表的头部开始遍历，遇到nil了就从另一个链表的头部开始遍历，这样两个指针会同时到达相交节点。如果切换过一次了还没有相遇，就说明两个链表不相交。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for singly-linked list.
+* type ListNode struct {
+* Val int
+* Next *ListNode
+* }
+*/
+func getIntersectionNode(headA, headB *ListNode) *ListNode {
+    var p1 *ListNode = headA
+    var p2 *ListNode = headB
+    p1Change := false
+    p2Change := false
+    for p1 != p2 {
+        p1 = p1.Next
+        p2 = p2.Next
+        if p1 == nil {
+            if !p1Change {
+                p1 = headB
+                p1Change = true
+            } else {
+                break
+            }
+        }
+        if p2 == nil {
+            if !p2Change {
+                p2 = headA
+                p2Change = true
+            } else {
+                break
+            }
+        }
+    }
+    if p1 != nil && p2 != nil {
+        return p1
+    }
+    return nil
+}
+            </code></pre>
+        </section>
+        <section id="反转链表">
+            <h1>反转链表</h1>
+            <p><a href="https://leetcode.cn/problems/reverse-linked-list" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题不难，可以用多种方式解决，首先是最容易想到的最简单的思路，就是把链表节点存到数组中，然后从后往前遍历数组，组成新的链表。</p>
+            <p>需要注意的是，在把链表节点存入数组的时候要断开其和其他节点的连接，否则在组成新链表的时候会报错为出现环状链表。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for singly-linked list.
+* type ListNode struct {
+* Val int
+* Next *ListNode
+* }
+*/
+func reverseList(head *ListNode) *ListNode {
+    list:=make([]*ListNode,0)
+    p:=head
+    for p!=nil {
+        next:=p.Next
+        p.Next=nil
+        list=append(list,p)
+        p=next
+    }
+    var ans *ListNode = new(ListNode)
+    p=ans
+    for i:=len(list)-1;i>=0;i-- {
+        p.Next=list[i]
+        p=p.Next
+    }
+    return ans.Next
+}
+            </code></pre>
+            <p>还可以用迭代的思路来做，每次要翻转链表的时候只需要改变链表的连接顺序，把原本是next的节点变为pre即可。所以可以通过保存前后节点的方式来把后节点的next变为当前节点，当前节点的next变为pre。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for singly-linked list.
+* type ListNode struct {
+* Val int
+* Next *ListNode
+* }
+*/
+func reverseList(head *ListNode) *ListNode {
+    p := head
+    var pre *ListNode
+    var next *ListNode
+    if p != nil {
+        next = p.Next
+    }
+    for p != nil {
+        p.Next = pre
+        pre = p
+        p = next
+        if p != nil {
+            next = p.Next
+        }
+    }
+    return pre
+}
+            </code></pre>
+        </section>
+        <section id="回文链表">
+            <h1>回文链表</h1>
+            <p><a href="https://leetcode.cn/problems/palindrome-linked-list" target="_blank" rel="noreferrer">题目链接</a>
+            </p>
+            <p>这道题的思路是找到链表的中间节点，然后反转后半部分链表，最后比较前半部分和后半部分链表是否相等。但是我选择直接存到数组里，然后判断数组是否是回文。因为其实时间复杂度是一样的，都需要完全遍历一遍链表后才能进行判断。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for singly-linked list.
+* type ListNode struct {
+* Val int
+* Next *ListNode
+* }
+*/
+func isPalindrome(head *ListNode) bool {
+    s := make([]int, 0)
+    p := head
+    for p != nil {
+        s = append(s, p.Val)
+        p = p.Next
+    }
+    i, j := 0, len(s)-1
+    for i <= j {
+        if s[i] != s[j] {
+            return false
+        }
+        i++
+        j--
+    }
+    return true
+}
+            </code></pre>
+        </section>
+        <section id="环形链表">
+            <h1>环形链表</h1>
+            <p><a href="https://leetcode.cn/problems/linked-list-cycle" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题的思路是使用快慢指针。我们用两个指针p1和p2，初始都指向head。p1每次走一步，p2每次走两步。如果链表中存在环，那么p2一定会追上p1并相遇。因为p2比p1快，所以p2一定会先进入环，然后在环中不断追赶p1，最终相遇。
+            </p>
+            <p>需要注意的是，在移动指针时要检查p1、p2以及p2.Next是否为nil。因为如果链表中没有环，那么p2最终会到达链表尾部(nil)。只要遇到nil就说明一定无环，此时应该返回false。</p>
+            <p>如果p1和p2相遇，说明链表中一定存在环，返回true。如果能够跳出循环，说明遇到了nil，也就是链表中不存在环，返回false。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func hasCycle(head *ListNode) bool {
+    p1, p2 := head, head
+    // 只要有nil就无环，无论是p1、p2还是p2的next。
+    for p1 != nil && p2 != nil && p2.Next != nil {
+        p1 = p1.Next
+        p2 = p2.Next.Next
+        if p1 == p2 {
+            return true
+        }
+    }
+    return false
+}
+            </code></pre>
+        </section>
+        <section id="环形链表II">
+            <h1>环形链表II</h1>
+            <p><a href="https://leetcode.cn/problems/linked-list-cycle-ii" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题是环形链表的进阶版，不仅要判断是否有环，还要找到环的入口节点。</p>
+            <p>这道题的解法很巧妙，分为两步：</p>
+            <ol>
+                <li>第一步和环形链表I一样，使用快慢指针判断是否有环，并让两个指针在环中相遇</li>
+                <li>第二步是找到环的入口。当两个指针相遇时，让p1重新指向head，然后p1和p2每次都只走一步，它们相遇的地方就是环的入口</li>
+            </ol>
+            <p>为什么第二步相遇的地方就是环的入口呢？这涉及到一个数学证明：</p>
+            <p>假设链表头到环入口的距离为a，环入口到相遇点的距离为b，相遇点到环入口的距离为c。那么：</p>
+            <ul>
+                <li>p1走过的距离：a + b</li>
+                <li>p2走过的距离：a + b + n(b + c)，其中n是p2在环中转的圈数</li>
+                <li>由于p2速度是p1的两倍，所以：2(a + b) = a + b + n(b + c)</li>
+                <li>化简得：a = c + (n-1)(b + c)</li>
+            </ul>
+            <p>这个等式说明：从head到环入口的距离，等于从相遇点到环入口的距离加上n-1圈。所以让p1从head开始，p2从相遇点开始，每次走一步，它们一定会在环入口相遇。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func detectCycle(head *ListNode) *ListNode {
+    p1,p2:=head,head
+    ifCycle:=false
+    for p1!=nil&&p2!=nil&&p2.Next!=nil {
+        p1=p1.Next
+        p2=p2.Next.Next
+        if p1==p2 {
+            ifCycle=true
+            break
+        }
+    }
+    if !ifCycle {
+        return nil
+    }
+    p1=head
+    for p1!=p2 {
+        p1=p1.Next
+        p2=p2.Next
+    }
+    return p1
+}
+            </code></pre>
+        </section>
+        <section id="合并两个有序链表">
+            <h1>合并两个有序链表</h1>
+            <p><a href="https://leetcode.cn/problems/merge-two-sorted-lists" target="_blank" rel="noreferrer">题目链接</a>
+            </p>
+            <p>这道题的思路很简单，就是用两个指针分别指向两个链表，每次比较两个指针指向的节点的值，将较小的节点接到结果链表后面，然后移动对应的指针。</p>
+            <p>需要注意的是，在将节点接到结果链表后面时，要先断开该节点与原链表的连接，否则会出现环状链表。</p>
+            <p>最后，如果其中一个链表已经遍历完了，就把另一个链表剩余的部分直接接到结果链表后面即可。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for singly-linked list.
+* type ListNode struct {
+*     Val int
+*     Next *ListNode
+* }
+*/
+func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
+    ans := new(ListNode)
+    p := ans
+    p1 := list1
+    p2 := list2
+    for p1 != nil && p2 != nil {
+        if p1.Val < p2.Val {
+            tmp := p1.Next
+            p1.Next = nil
+            p.Next = p1
+            p = p.Next
+            p1 = tmp
+        } else {
+            tmp := p2.Next
+            p2.Next = nil
+            p.Next = p2
+            p = p.Next
+            p2 = tmp
+        }
+    }
+    if p1 != nil {
+        p.Next = p1
+    } else if p2 != nil {
+        p.Next = p2
+    }
+    return ans.Next
+}
+        </code></pre>
+        </section>
+        <section id="两数相加">
+            <h1>两数相加</h1>
+            <p><a href="https://leetcode.cn/problems/add-two-numbers" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题是一个高精度加法的题目，两个链表分别代表两个逆序的数字，我们需要将这两个数字相加并返回结果链表。</p>
+            <p>解题思路如下：</p>
+            <ol>
+                <li>创建一个新的链表用于存储结果</li>
+                <li>同时遍历两个链表，将对应位置的数字相加</li>
+                <li>需要考虑进位的情况，用一个布尔变量ifAdd记录是否需要进位</li>
+                <li>当其中一个链表遍历完后，需要特殊处理进位的情况：
+                    <ul>
+                        <li>如果还有进位，且其中一个链表还有剩余节点，需要将剩余节点的值都加1并处理可能的连续进位</li>
+                        <li>如果还有进位，但两个链表都遍历完了，需要新建一个值为1的节点</li>
+                        <li>如果没有进位，直接将剩余链表接上即可</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>这个解法的关键在于处理进位的传递。当出现连续的9时(比如999)，进位会导致一系列的数字变化，需要一直向后处理直到不再需要进位为止。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for singly-linked list.
+* type ListNode struct {
+* Val int
+* Next *ListNode
+* }
+*/
+func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+    ans := new(ListNode)
+    p := ans
+    p1 := l1
+    p2 := l2
+    var ifAdd bool
+    for p1 != nil && p2 != nil {
+        anstmp := 0
+        if ifAdd {
+            anstmp += 1
+            ifAdd = false
+        }
+        tmp := p1.Val + p2.Val
+        anstmp += tmp
+        if anstmp/10 != 0 {
+            ifAdd = true
+            anstmp %= 10
+        }
+        p.Next = new(ListNode)
+        p = p.Next
+        p.Val = anstmp
+        p1 = p1.Next
+        p2 = p2.Next
+    }
+    if ifAdd {
+        if p1 != nil {
+            p11 := p1
+            p11.Val++
+            for p11.Val/10 != 0 {
+                if p11.Next == nil {
+                    p11.Val %= 10
+                    p11.Next = new(ListNode)
+                    p11.Next.Val = 1
+                    break
+                }
+                p11.Next.Val++
+                p11.Val %= 10
+                p11 = p11.Next
+            }
+            p.Next = p1
+        } else if p2 != nil {
+            p22 := p2
+            p22.Val++
+            for p22.Val/10 != 0 {
+                if p22.Next == nil {
+                    p22.Val %= 10
+                    p22.Next = new(ListNode)
+                    p22.Next.Val = 1
+                    break
+                }
+                p22.Next.Val++
+                p22.Val %= 10
+                p22 = p22.Next
+            }
+            p.Next = p2
+        } else {
+            p.Next = new(ListNode)
+            p = p.Next
+            p.Val = 1
+        }
+    } else {
+        if p1 != nil {
+            p.Next = p1
+        } else if p2 != nil {
+            p.Next = p2
+        }
+    }
+    return ans.Next
+}
+            </code></pre>
+        </section>
+        <section id="删除链表的倒数第N个节点">
+            <h1>删除链表的倒数第N个节点</h1>
+            <p><a href="https://leetcode.cn/problems/remove-nth-node-from-end-of-list" target="_blank"
+                    rel="noreferrer">题目链接</a></p>
+            <p>这道题的思路是使用快慢指针。首先创建一个虚拟头节点dummy指向head，这样可以统一处理删除头节点的情况。然后用pre指向dummy，p1和p2指向head。让p2先走n步，此时p2和p1的距离就是n。然后pre、p1和p2同时向后移动，当p2到达链表尾部(nil)时，p1正好指向要删除的节点，pre指向其前一个节点。最后让pre.Next指向p1.Next完成删除操作。返回dummy.Next即为结果。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for singly-linked list.
+* type ListNode struct {
+* Val int
+* Next *ListNode
+* }
+*/
+func removeNthFromEnd(head *ListNode, n int) *ListNode {
+    dunny := new(ListNode)
+    dunny.Next = head
+    pre := dunny
+    p1 := head
+    p2 := head
+    for i := 0; i < n; i++ {
+        p2 = p2.Next
+    }
+    for p2 != nil {
+        pre = pre.Next
+        p1 = p1.Next
+        p2 = p2.Next
+    }
+    pre.Next = p1.Next
+    return dunny.Next
+}
+            </code></pre>
+        </section>
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
@@ -918,7 +1325,7 @@ func searchMatrix(matrix [][]int, target int) bool {
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-21 23:18:55</p>
+        <p>最后编辑时间: 2025-01-22 21:01:25</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
