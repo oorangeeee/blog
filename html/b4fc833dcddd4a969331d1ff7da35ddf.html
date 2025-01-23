@@ -51,6 +51,10 @@
                 <li><a href="#合并两个有序链表">合并两个有序链表</a></li>
                 <li><a href="#两数相加">两数相加</a></li>
                 <li><a href="#删除链表的倒数第N个节点">删除链表的倒数第N个节点</a></li>
+                <li><a href="#两两交换链表中的节点">两两交换链表中的节点</a></li>
+                <li><a href="#K个一组翻转链表">K个一组翻转链表</a></li>
+                <li><a href="#随机链表的复制">随机链表的复制</a></li>
+                <li><a href="#排序链表">排序链表</a></li>
             </ul>
         </nav>
         <p class="article-intro">声明：本文题解所有代码都是本人编写，但由于本人能力有限，故解题思路大多参考和阅读他人文档，如果本文有侵权行为，请及时联系我删除。</p>
@@ -1313,6 +1317,141 @@ func removeNthFromEnd(head *ListNode, n int) *ListNode {
 }
             </code></pre>
         </section>
+        <section id="两两交换链表中的节点">
+            <h1>两两交换链表中的节点</h1>
+            <p><a href="https://leetcode.cn/problems/swap-nodes-in-pairs" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题的思路是先将链表节点存入一个切片中，方便后续操作。然后创建一个虚拟头节点dummy，pre指向dummy。遍历切片，每次取两个节点进行交换：将pre.Next指向第二个节点，第一个节点的Next指向第二个节点的Next，第二个节点的Next指向第一个节点，pre移动到第一个节点。如果最后只剩一个节点则不需要交换。最后返回dummy.Next即为结果。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func swapPairs(head *ListNode) *ListNode {
+    q := make([]*ListNode, 0)
+    p := head
+    for p != nil {
+        q = append(q, p)
+        p = p.Next
+    }
+    dunny := new(ListNode)
+    dunny.Next = head
+    pre := dunny
+    for i := 0; i < len(q); i += 2 {
+        if i == len(q)-1 {
+            break
+        }
+        pre.Next = q[i+1]
+        q[i].Next = q[i+1].Next
+        q[i+1].Next = q[i]
+        pre = q[i]
+    }
+    return dunny.Next
+}
+            </code></pre>
+        </section>
+        <section id="K个一组翻转链表">
+            <h1>K个一组翻转链表</h1>
+            <p><a href="https://leetcode.cn/problems/reverse-nodes-in-k-group" target="_blank" rel="noreferrer">题目链接</a>
+            </p>
+            <p>这道题的思路是先将链表节点存入一个切片中，方便后续操作。然后创建一个虚拟头节点dummy，pre指向dummy。遍历切片，每次取k个节点进行翻转：将pre.Next指向第k个节点，保存第k个节点的Next，然后从后往前依次将节点的Next指向前一个节点，最后将第一个节点的Next指向保存的next，pre移动到第一个节点。如果剩余节点数小于k则不需要翻转。最后返回dummy.Next即为结果。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+
+        </section>
+        <section id="随机链表的复制">
+            <h1>随机链表的复制</h1>
+            <p><a href="https://leetcode.cn/problems/copy-list-with-random-pointer" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题的思路是使用哈希表。首先遍历链表，将每个节点及其对应的随机指针存入哈希表中。然后再次遍历链表，根据哈希表中的随机指针创建新节点，并连接到新链表中。最后返回新链表的头节点。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for a Node.
+ * type Node struct {
+ *     Val int
+ *     Next *Node
+ *     Random *Node
+ * }
+ */
+
+func copyRandomList(head *Node) *Node {
+    hMap := make(map[*Node]*Node)
+    p := head
+    for p != nil {
+        hMap[p] = new(Node)
+        hMap[p].Val = p.Val
+        p = p.Next
+    }
+    p = head
+    for p != nil {
+        hMap[p].Next = hMap[p.Next]
+        hMap[p].Random = hMap[p.Random]
+        p = p.Next
+    }
+    return hMap[head]
+}
+            </code></pre>
+        </section>
+        <section id="排序链表">
+            <h1>排序链表</h1>
+            <p><a href="https://leetcode.cn/problems/sort-list" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p>这道题的思路是使用归并排序。首先将链表分成两部分，然后对两部分分别进行排序，最后将两部分合并。（注意不能用快排，会超时！！）</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func sortList(head *ListNode) *ListNode {
+    if head == nil || head.Next == nil {
+        return head
+    }
+    // 使用快慢指针找到中点
+    slow, fast := head, head.Next
+    for fast != nil && fast.Next != nil {
+        slow = slow.Next
+        fast = fast.Next.Next
+    }
+
+    // 断开链表
+    mid := slow.Next
+    slow.Next = nil
+
+    // 递归排序左右两半
+    left := sortList(head)
+    right := sortList(mid)
+
+    // 合并有序链表
+    dummy := &ListNode{Val: 0}
+    curr := dummy
+    for left != nil && right != nil {
+        if left.Val < right.Val {
+            curr.Next = left
+            left = left.Next
+        } else {
+            curr.Next = right
+            right = right.Next
+        }
+        curr = curr.Next
+    }
+    if left != nil {
+        curr.Next = left
+    }
+    if right != nil {
+        curr.Next = right
+    }
+    return dummy.Next
+}
+            </code></pre>
+        </section>
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
@@ -1325,7 +1464,7 @@ func removeNthFromEnd(head *ListNode, n int) *ListNode {
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-22 21:01:25</p>
+        <p>最后编辑时间: 2025-01-23 23:47:25</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
