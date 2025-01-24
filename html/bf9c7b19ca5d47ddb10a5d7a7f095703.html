@@ -1,17 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="zh-cn">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="priority" content="normal">
-    <meta name="description" content="GoLang语言大揭秘，了解GoLang的底层知识。">
-    <meta name="keywords" content="GoLang, 编程, 面试, 技术分享">
-    <meta name="author" content="橙子">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="normal" name="priority" />
+    <meta content="GoLang语言大揭秘，了解GoLang的底层知识。" name="description" />
+    <meta content="GoLang, 编程, 面试, 技术分享" name="keywords" />
+    <meta content="橙子" name="author" />
     <title>GoLang语言大揭秘！</title>
-    <link rel="stylesheet" href="../css/article.css">
-    <link rel="stylesheet" href="../css/beian.css">
-    <link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+    <link href="../css/article.css" rel="stylesheet" />
+    <link href="../css/beian.css" rel="stylesheet" />
+    <link href="../images/favicon.ico" rel="icon" type="image/x-icon" />
 </head>
 
 <body>
@@ -22,21 +23,20 @@
         <nav>
             <h2>目录</h2>
             <ul>
-                <li><a href="#why-golang">为什么选择GoLang</a></li>
-                <li><a href="#is-oop">GoLang是面向对象的语言吗</a></li>
-                <li><a href="#embed-vs-compose">嵌入和组合的区别</a></li>
-                <li><a href="#make-vs-new">make和new的区别</a></li>
-                <li><a href="#slice-vs-array">slice和array的区别</a></li>
-                <li><a href="#slice-append">slice的扩容机制</a></li>
-                <li><a href="#for_range_v">for range的坑</a></li>
-                <li><a href="#pointers">Go语言的三种指针类型</a></li>
-                <li><a href="#interface">接口底层原理</a></li>
-                <li><a href="#compare">Go语言的比较奥秘</a></li>
+                <li><a href="#为什么选择GoLang">为什么选择GoLang</a></li>
+                <li><a href="#GoLang是面向对象的语言吗">GoLang是面向对象的语言吗</a></li>
+                <li><a href="#嵌入和组合的区别">嵌入和组合的区别</a></li>
+                <li><a href="#make和new的区别">make和new的区别</a></li>
+                <li><a href="#slice和array的区别">slice和array的区别</a></li>
+                <li><a href="#slice的扩容机制">slice的扩容机制</a></li>
+                <li><a href="#for range的坑">for range的坑</a></li>
+                <li><a href="#Go语言的三种指针类型">Go语言的三种指针类型</a></li>
+                <li><a href="#接口底层原理">接口底层原理</a></li>
+                <li><a href="#比较的奥秘">比较的奥秘</a></li>
             </ul>
         </nav>
         <p class="article-intro">本篇文章旨在解密GoLang中的零零散散的小知识，为面试或者日常开发打下坚实的基础。</p>
-
-        <section id="why-golang">
+        <section id="为什么选择GoLang">
             <h1>为什么选择GoLang</h1>
             <p>在一切开始之前我们先来聊聊GoLang相较于其他语言的优劣势。</p>
             <table>
@@ -53,7 +53,7 @@
                                 <li><strong>简单易学</strong>：Go可以在很短的时间内上手开发，但了解底层机制需要一些时间。</li>
                                 <li><strong>跨平台编译</strong>：结果为二进制可执行文件</li>
                                 <li><strong>简洁的语法</strong>：代码风格统一</li>
-                                <li><strong>天生支持高并发</strong>：Go通过Goroutine和Channel实现不同于其他语言的并发机制。<br>Channel的理论依据是CSP并发模型，即通过通信来共享内存；通过runtime运行时实现了GMP模型作为自己的调度模型，一个用户线程对应一个系统线程，同时在GMP的调度下可以将多个协程在一个用户线程中并发运行，极大的减少了用户态到内核态的切换成本。
+                                <li><strong>天生支持高并发</strong>：Go通过Goroutine和Channel实现不同于其他语言的并发机制。<br />Channel的理论依据是CSP并发模型，即通过通信来共享内存；通过runtime运行时实现了GMP模型作为自己的调度模型，一个用户线程对应一个系统线程，同时在GMP的调度下可以将多个协程在一个用户线程中并发运行，极大的减少了用户态到内核态的切换成本。
                                 </li>
                                 <li><strong>行之有效的GC</strong>：Go语言最新的三色标记法+混合写屏障使得其GC效果相当不错，尽可能的减少了STW的时间。</li>
                             </ol>
@@ -69,8 +69,7 @@
             </table>
             <p>正因上述的诸多优势，Go语言才能得到越来越多开发者的青睐。</p>
         </section>
-
-        <section id="is-oop">
+        <section id="GoLang是面向对象的语言吗">
             <h1>GoLang是面向对象的语言吗</h1>
             <p>官方的QA给出的回答是yes and no。也就是说“是也不是”，因为Go不会强制要求你用面向对象来写，但是它确实可以用结构体+组合等方式实现面向对象形式的编程。</p>
             <p>为了介绍在GoLang中的面向对象编程，我们要了解面向对象的三大特性在GO中的表现：</p>
@@ -83,10 +82,10 @@
                 </li>
                 <li><strong>多态</strong>：
                     Go语言通过接口来实现多态。接口是一组方法的集合，任何类型只要实现了接口中的所有方法，就可以被视为该接口类型。这样就可以实现不同类型之间的多态性。
+                </li>
             </ol>
         </section>
-
-        <section id="embed-vs-compose">
+        <section id="嵌入和组合的区别">
             <h1>嵌入和组合的区别</h1>
             <p>有很多人不知道嵌入和组合的区别，这里澄清一下。</p>
             <p>请看如下代码：</p>
@@ -109,8 +108,7 @@ type s3 struct {
             <p>组合的情况下s3只能通过s3.x.a来访问a</p>
             <p>如果结构体有方法，那么也是同理。这些都可以用来实现继承。</p>
         </section>
-
-        <section id="make-vs-new">
+        <section id="make和new的区别">
             <h1>make和new的区别</h1>
             <ol>
                 <li>make用于创建slice、map、channel，new用于创建基本数据类型和结构体</li>
@@ -121,8 +119,7 @@ type s3 struct {
             <p>你可能会好奇如果用new来创建一个slice、map、channel会怎么样？</p>
             <p>答案是：会报空指针错误。除非你new完后又用make来初始化。</p>
         </section>
-
-        <section id="slice-vs-array">
+        <section id="slice和array的区别">
             <h1>slice和array的区别</h1>
             <ol>
                 <li>
@@ -158,7 +155,7 @@ array := [3]int{1, 2, 3}
                 </li>
             </ol>
         </section>
-        <section id="slice-append">
+        <section id="slice的扩容机制">
             <h1>slice的扩容机制</h1>
             <p>在讲述具体的扩容机制的时候我们要先定义几个概念：</p>
             <p>
@@ -169,12 +166,11 @@ array := [3]int{1, 2, 3}
             </ul>
             </p>
             <p>扩容的逻辑如图：</p>
-            <img src="../images/slice_growSlice.png" alt="slice扩容逻辑">
+            <img alt="slice扩容逻辑" src="../images/slice_growSlice.png" />
             <p>图中所说的最后一步的内存对齐，实际上是Go语言为了减少CPU的内存访问次数，将内存通过一定的逻辑对齐到特殊值的操作。</p>
             <p>这就是为什么有时候的实际扩容值和期望扩容值不一样。</p>
         </section>
-
-        <section id="for_range_v">
+        <section id="for range的坑">
             <h1>for range的坑</h1>
             <p>for range其实有很多坑。。。。我们一个一个展开。</p>
             <h2>临时变量</h2>
@@ -193,8 +189,8 @@ func main() {
     values := make([]*int, 0, len(map1))
     for key, value := range map1 {
         fmt.Println(key, value)
-        keys = append(keys, &key)
-        values = append(values, &value)
+        keys = append(keys, &amp;key)
+        values = append(values, &amp;value)
     }
     fmt.Println(keys)
     fmt.Println(values)
@@ -261,7 +257,7 @@ func main() {
     // 遍历的时候改变值
     slice := []int{1, 2, 3}
     for i, v := range slice {
-        if i < len(slice)-1 {
+        if i &lt; len(slice)-1 {
             slice[i+1] = v
         }
         fmt.Println(i, v)
@@ -290,7 +286,7 @@ func main() {
     // 遍历的时候删除值
     slice := []int{1, 2, 3}
     for i, v := range slice {
-        if i < len(slice)-1 { 
+        if i &lt; len(slice)-1 { 
             slice=append(slice[:i+1], slice[i+2:]...) 
         }
         fmt.Println(i, v)
@@ -309,8 +305,7 @@ func main() {
             <p>之所以会输出两个3，是因为在输出0 1的时候，已经用append覆盖了2，但是临时切片的len和cap不变，所以会输出最后一个数，自然也就是是3。</p>
             <p>又一次印证，for range 生成的临时数组和原数组是共用一个底层数组的，所以改变值会影响原数组。</p>
         </section>
-
-        <section id="pointers">
+        <section id="Go语言的三种指针类型">
             <h1>Go语言的三种指针类型</h1>
             <p>大家都知道go语言有指针类型可以指向变量的内存地址。</p>
             <p>但是go语言有三种指针类型，分别是：</p>
@@ -356,7 +351,7 @@ type myint int
 
 func main() {
     var a myint = 1
-    ap := &a
+    ap := &amp;a
     fmt.Println(*ap)
     var app *int
     app = (*int)(ap)
@@ -377,7 +372,7 @@ type myint int
 
 func main() {
     var a myint = 1
-    ap := &a
+    ap := &amp;a
     fmt.Println(*ap)
     var app *float64
     app = (*float64)(ap)
@@ -416,7 +411,7 @@ type myint int
 
 func main() {
     var a myint = 1
-    ap := &a
+    ap := &amp;a
     fmt.Println(*ap)
     var app *float64
     app = (*float64)(unsafe.Pointer(ap))
@@ -426,7 +421,7 @@ func main() {
             <p>可以看到通过unsafe.Pointer的转化就可以将一个int类型作为底层的指针赋值给float64类型的指针。</p>
             <p>请注意，其余的三个特点也非常重要，这是unsafe.Pointer与普通类型指针和uintptr的主要区别。</p>
             <h2>uintptr</h2>
-            <P>很多人以为uintptr是指针，其实不然，它不过是一个uint，和指针类型的大小相等罢了，它是用来指针运算的工具。</P>
+            <p>很多人以为uintptr是指针，其实不然，它不过是一个uint，和指针类型的大小相等罢了，它是用来指针运算的工具。</p>
             <ol>
                 <li>
                     <p>可以和unsafe.Pointer相互转化，可以进行指针运算。</p>
@@ -435,7 +430,7 @@ func main() {
                     <p>不可以访问内存的值。</p>
                 </li>
                 <li>
-                    <P>不算指针，自然不存在所谓的指针类型转化，它就是一个整数类型。</P>
+                    <p>不算指针，自然不存在所谓的指针类型转化，它就是一个整数类型。</p>
                 </li>
                 <li>
                     <p>指向的内容会被GC回收。</p>
@@ -443,8 +438,7 @@ func main() {
             </ol>
             <p>所以其实uintptr就是一个和指针大小相等的整数类型。可以进行指针运算，并且不能持有对象，指向的内容会被回收。</p>
         </section>
-
-        <section id="interface">
+        <section id="接口底层原理">
             <h1>接口底层原理</h1>
             <p>接口在Go语言中是一种类型，它定义了一组方法。任何实现了这些方法的类型都可以认为是实现了接口。</p>
             <p>本章节将详细讲述interface的底层原理。</p>
@@ -458,9 +452,8 @@ func main() {
                     <p>eface：空接口</p>
                 </li>
             </ul>
-            </p>
             <h2>eface</h2>
-            <p>所谓空接口，就是没有定义任何方法的接口。<br>所有类型都实现了空接口，所以空接口可以存储任何类型。</p>
+            <p>所谓空接口，就是没有定义任何方法的接口。<br />所有类型都实现了空接口，所以空接口可以存储任何类型。</p>
             <p>eface的结构体定义如下：</p>
             <pre><code>
 type eface struct {
@@ -574,7 +567,7 @@ type InterfaceType struct {
             <h2>接口实现</h2>
             <p>通过了解两种接口的结构体定义，我们可以更好地理解接口的本质。实际上，接口是一个包含了实现类型、接口类型、实现类型数据、实现方法和定义方法的数据结构。</p>
             <p>在go语言中实现接口时隐性的。只需要实现所有接口定义的方法，就视为实现了这个接口</p>
-            <P>任何一个实现了接口的数据结构，都可以赋值给静态类型为对应接口类型的变量。</P>
+            <p>任何一个实现了接口的数据结构，都可以赋值给静态类型为对应接口类型的变量。</p>
             <p>这个变量只能调用接口定义的方法，不能调用实现类型的方法。也不能访问实现类型的数据。</p>
             <h2>itab缓存</h2>
             <p>其实可以发现，同一个接口+同一个实现类型对应的itab是唯一的。所以如果你创建了多个变量赋值到接口类型，每一次都创建一个新的itab的话，是不是太浪费了？</p>
@@ -598,11 +591,11 @@ func (a *a) show() {
 
 func main() {
     var a1 a = a{a: 1}
-    var a1i ai = &a1
+    var a1i ai = &amp;a1
     var a2 a = a{a: 2}
-    var a2i ai = &a2
+    var a2i ai = &amp;a2
     var a3 a = a{a: 3}
-    var a3i ai = &a3
+    var a3i ai = &amp;a3
     a1i.show()
     a2i.show()
     a3i.show()
@@ -640,7 +633,7 @@ type itabTableType struct {
                 </li>
             </ol>
             <h2>接口比较</h2>
-            <br>
+            <br />
             <h3>接口之间比较</h3>
             <p>不同接口之间比较会报错。除了空接口，空接口可以和任何一个接口值或者类型值比较，此时只比较实际数据类型和实际数据值。</p>
             <p>举个例子：</p>
@@ -736,7 +729,6 @@ func main() {
 }
 
             </code></pre>
-
             <p>输出结果为：</p>
             <pre><code>
 false
@@ -799,8 +791,7 @@ false
             <p>可以看出，a1和a2的实际类型和实际值都相同，所以返回true。</p>
             <p>a1和a3的实际类型和实际值不同，所以返回false。</p>
         </section>
-
-        <section id="compare">
+        <section id="比较的奥秘">
             <h1>比较的奥秘</h1>
             <p>Go语言中有这么多种酷酷的数据类型，你还可以自定义无数结构体和接口，难道他们都可以相互比较吗？！</p>
             <p>事实上，并非如此！</p>
@@ -862,7 +853,7 @@ false
                     </tr>
                     <tr>
                         <td>Slice</td>
-                        <td>1、都为 nil；2、非空、长度相等，首元素指向同一个底层数组的相同元素，即 &x[0] == &y[0] 或者 相同索引处的元素“深度”相等</td>
+                        <td>1、都为 nil；2、非空、长度相等，首元素指向同一个底层数组的相同元素，即 &amp;x[0] == &amp;y[0] 或者 相同索引处的元素“深度”相等</td>
                     </tr>
                     <tr>
                         <td>numbers, bools, strings, and channels</td>
@@ -870,8 +861,8 @@ false
                     </tr>
                 </tbody>
             </table>
-            <p>上述规则来自于：<a href="https://golang.design/go-questions/stdlib/reflect/compare/" target="_blank"
-                    rel="noreferrer">Go 程序员面试笔试宝典© 2022 饶全成, 欧长坤, 楚秦等</a></p>
+            <p>上述规则来自于：<a href="https://golang.design/go-questions/stdlib/reflect/compare/" rel="noreferrer"
+                    target="_blank">Go 程序员面试笔试宝典© 2022 饶全成, 欧长坤, 楚秦等</a></p>
             <h2>大小比较</h2>
             <p>大小比较，就是比较两个值的大小。</p>
             <p>对于数值类型，和字符串类型可以直接用比较符号进行比较。</p>
@@ -879,7 +870,6 @@ false
             <p>对于接口，则不能比较大小，当然你也可以自定义比较函数比较。</p>
             <p>除了结构体、接口还有func等类型，都可以自定义比较函数比较。</p>
         </section>
-
         <!-- <section id="reflect">
             <h1>反射</h1>
             <p>反射是Go语言中的一种强大的工具，它允许你在运行时检查和操作变量。</p>
@@ -889,21 +879,19 @@ false
             <h2>什么是反射</h2>
             <p>Go语言圣经中说：“Go 语言提供了一种机制在运行时更新变量和检查它们的值、调用它们的方法，但是在编译时并不知道这些变量的具体类型，这称为反射机制。”</p>
         </section> -->
-
-
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
-            <img src="../images/备案图标.png" alt="备案图标" class="beian-icon">
+            <img alt="备案图标" class="beian-icon" src="../images/备案图标.png" />
             <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer" target="_blank">
                 鄂公网安备 42011102005555 </a>
             <span class="spacer"> </span>
-            <a href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank" class="icp-beian">
+            <a class="icp-beian" href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank">
                 青ICP备2024002362号-1 </a>
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-13 15:53:54</p>
+        <p>最后编辑时间: 2025-01-24 17:49:39</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>

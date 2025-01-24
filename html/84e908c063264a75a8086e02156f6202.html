@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="normal" name="priority" />
+    <meta content="Linux启动后发生了什么" name="description" />
+    <meta content="linux, unbuntu, bios, 面试, 计算机" name="keywords" />
+    <meta content="橙子" name="author" />
+    <title>Linux启动过程发生了什么</title>
+    <link href="../css/article.css" rel="stylesheet" />
+    <link href="../css/beian.css" rel="stylesheet" />
+    <link href="../images/favicon.ico" rel="icon" type="image/x-icon" />
+</head>
+
+<body>
+    <header>
+        <h1>Linux启动过程发生了什么</h1>
+    </header>
+    <main>
+        <nav>
+            <h2>目录</h2>
+            <ul>
+                <li><a href="#BIOS\UEFI登场">BIOS\UEFI登场</a></li>
+                <li><a href="#POST检查\开机自检">POST检查\开机自检</a></li>
+                <li><a href="#查找并导入引导加载程序">查找并导入引导加载程序</a></li>
+                <li><a href="#内核接管">内核接管</a></li>
+                <li><a href="#总结">总结</a></li>
+            </ul>
+        </nav>
+        <p class="article-intro">一切从你按下电源键的那一刻就开始了。</p>
+        <section id="BIOS\UEFI登场">
+            <h1>BIOS\UEFI登场</h1>
+            <p>首先大名鼎鼎的<strong>BIOS</strong>登场，BIOS是Basic Input Output System的缩写，中文名称为基本输入输出系统。</p>
+            <p>BIOS是计算机启动时首先执行的程序，它位于计算机主板上的ROM芯片中，<strong>负责启动计算机并进行硬件自检。</strong></p>
+            <p>BIOS的主要功能包括：</p>
+            <ul>
+                <li>启动计算机</li>
+                <li>进行硬件自检</li>
+                <li>加载操作系统</li>
+            </ul>
+            <p>更新版本的计算机使用的并非BIOS，而是<strong>UEFI</strong>，UEFI是Unified Extensible Firmware Interface的缩写，中文名称为统一可扩展固件接口。
+            </p>
+            <p>UEFI是BIOS的升级版，它提供了更强大的功能和更灵活的配置选项。</p>
+            <p>UEFI的主要功能包括：</p>
+            <ul>
+                <li>启动计算机</li>
+                <li>进行硬件自检</li>
+                <li>加载操作系统</li>
+            </ul>
+            <p>尽管他们的主要功能相同，UEFI相比BIOS具有以下优势：</p>
+            <ul>
+                <li>支持更大容量硬盘(&gt;2TB)和更多分区(主要区别)</li>
+                <li>启动速度更快</li>
+                <li>提供图形化界面</li>
+                <li>支持安全启动，防止启动恶意程序</li>
+                <li>支持网络功能，可远程诊断和维护</li>
+                <li>模块化设计，便于扩展功能</li>
+            </ul>
+        </section>
+        <section id="POST检查\开机自检">
+            <h1>POST检查\开机自检</h1>
+            <p>POST是Power-On Self Test的缩写，中文名称为加电自检。</p>
+            <p>POST是计算机启动时由BIOS\UEFI执行的自检程序，主要负责检查计算机的基本硬件是否正常工作。</p>
+            <p>POST主要检查以下硬件：</p>
+            <ul>
+                <li>CPU - 检查处理器是否正常工作</li>
+                <li>内存 - 检查RAM是否可读写</li>
+                <li>主板芯片组 - 检查南北桥芯片是否正常</li>
+                <li>显卡 - 检查显示设备是否正常</li>
+                <li>键盘 - 检查键盘是否连接正常</li>
+                <li>硬盘 - 检查存储设备是否可访问</li>
+            </ul>
+            <p>如果POST检测到硬件故障，会通过蜂鸣器发出不同的提示音或显示错误代码来提示用户。只有在POST全部通过后，计算机才会继续启动过程。</p>
+            <p>POST确保在完全打开所有设备前，各项硬件都能正常工作。</p>
+        </section>
+        <section id="查找并导入引导加载程序">
+            <h1>查找并导入引导加载程序</h1>
+            <p>在POST检查完成后，BIOS/UEFI会根据预设的启动顺序查找可引导设备。</p>
+            <p>常见的启动设备包括：</p>
+            <ul>
+                <li>硬盘(HDD/SSD)</li>
+                <li>光驱(CD/DVD)</li>
+                <li>USB设备</li>
+                <li>网络启动(PXE)</li>
+            </ul>
+            <p>BIOS/UEFI会按照设定的顺序依次检查这些设备，寻找引导加载程序。</p>
+            <p>如果你想，你可以更改预设的查找顺序。</p>
+            <p>在BIOS系统中引导加载程序代码位于硬盘驱动器的第一个小块中，称为主引导记录。</p>
+            <p>在UEFI系统中，有一个单独的分区来存储.efi引导加载程序文件。</p>
+            <p>一旦找到有效的引导记录，BIOS/UEFI就会将控制权交给引导程序(Boot Loader)，由它负责加载操作系统内核。</p>
+            <p>引导加载程序的主要工作是：</p>
+            <ol>
+                <li>在磁盘上找到操作系统内核。</li>
+                <li>加载操作系统内核进内存。</li>
+                <li>运行操作系统内核。</li>
+            </ol>
+            <p>一些常见的引导加载程序有：</p>
+            <ul>
+                <li>LILO(相当过时，现在几乎没人用了)</li>
+                <li>GRUB2(现在主流的引导加载程序)</li>
+            </ul>
+            <p>GRUB2可以处理启动多个操作系统，其具有图形或者基于文本的菜单，可以供你选择启动哪个操作系统。</p>
+            <p>当GRUB2启动内核程序后，就会将控制器交给内核。</p>
+        </section>
+        <section id="内核接管">
+            <h1>内核接管</h1>
+            <p>内核启动后，接管所有资源，并且开始启动所有的后台进程和服务。</p>
+            <p>具体流程为：</p>
+            <ol>
+                <li>内核将自己解压进内存。</li>
+                <li>检查硬件。</li>
+                <li>加载设备驱动程序和其他内核模块。</li>
+                <li>启动Init程序，Linux中称之为Systemd(取代老Linux中的SysVinit和Upstart)，Systemd是Linux系统所有进程的父进程。</li>
+                <li>
+                    Systmd启动系统并为其的使用做准备：
+                    <ol>
+                        <li>检查是否有剩余的硬件驱动程序未加载。</li>
+                        <li>挂载所有不同的文件系统和磁盘。</li>
+                        <li>启动所有的后台服务，如网络、声音、电源管理。</li>
+                        <li>出现图形提示后，启动图形化桌面环境，并处理用户登录。</li>
+                    </ol>
+                </li>
+            </ol>
+            <p>可见Systemd是Linux系统中非常重要的一个程序，它负责启动和维护系统中的所有进程和服务。</p>
+            <p>它使用目标配置文件来决定应该启动到哪种模式。</p>
+            <p>一些基本的模式是多用户纯文本模式(就是命令行模式)，多用户图形模式(就是图形界面模式)。</p>
+            <p>总之，你要清楚Systemd在幕后为你处理了初始化启动的所有内容。</p>
+        </section>
+        <section id="总结">
+            <h1>总结</h1>
+            <p>Linux的启动过程是一个复杂但有序的过程，主要包含以下步骤：</p>
+            <ol>
+                <li>按下电源键后，BIOS/UEFI被激活
+                    <ul>
+                        <li>现代计算机主要使用UEFI，它比BIOS更快更强大</li>
+                        <li>负责最基础的硬件初始化</li>
+                    </ul>
+                </li>
+                <li>执行POST自检
+                    <ul>
+                        <li>检查CPU、内存、主板等核心硬件</li>
+                        <li>确保基本硬件正常工作</li>
+                    </ul>
+                </li>
+                <li>寻找并加载引导程序
+                    <ul>
+                        <li>按预设顺序查找可引导设备</li>
+                        <li>现代Linux主要使用GRUB2作为引导加载程序</li>
+                    </ul>
+                </li>
+                <li>内核接管系统
+                    <ul>
+                        <li>检查硬件、加载驱动和模块</li>
+                        <li>启动Systemd进程</li>
+                        <li>Systemd初始化系统服务：再次检查驱动、挂载各种文件系统和磁盘、启动诸如电源、声音管理等后台程序。</li>
+                        <li>根据不同的配置文件准备用户登录环境</li>
+                    </ul>
+                </li>
+            </ol>
+        </section>
+    </main>
+    <footer class="beian-footer">
+        <div class="beian-info">
+            <img alt="备案图标" class="beian-icon" src="../images/备案图标.png" />
+            <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer"
+                target="_blank">鄂公网安备 42011102005555 </a>
+            <span class="spacer"> </span>
+            <a class="icp-beian" href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer"
+                target="_blank">青ICP备2024002362号-1 </a>
+        </div>
+    </footer>
+    <footer class="last-edit">
+        <p>最后编辑时间: 2025-01-24 18:35:28</p>
+    </footer>
+    <script src="../js/article.js"></script>
+</body>
+
+</html>
