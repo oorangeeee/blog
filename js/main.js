@@ -119,16 +119,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(text, 'text/html');
 
-                    // 检查必要元素
-                    const titleElement = doc.querySelector('head > title');
+                    // 使用更宽松的选择器
+                    const titleElement = doc.querySelector('title');
                     if (!titleElement) {
                         console.error(`文件 ${file} 缺少 <title> 标签`);
                         continue;
                     }
 
-                    const footerElement = doc.querySelector('body > footer.last-edit > p');
+                    const footerElement = doc.querySelector('footer.last-edit p');
                     if (!footerElement) {
-                        console.error(`文件 ${file} 缺少 footer.last-edit > p 元素`);
+                        console.error(`文件 ${file} 缺少 footer.last-edit 元素或其中的 p 元素`);
                         continue;
                     }
 
