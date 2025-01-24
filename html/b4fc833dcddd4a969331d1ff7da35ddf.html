@@ -1362,11 +1362,44 @@ func swapPairs(head *ListNode) *ListNode {
             </p>
             <p>这里给出Go代码：</p>
             <pre><code>
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func reverseKGroup(head *ListNode, k int) *ListNode {
+    q := make([]*ListNode, 0)
+    p := head
+    for p != nil {
+        q = append(q, p)
+        p = p.Next
+    }
+    dunny := new(ListNode)
+    dunny.Next = head
+    pre := dunny
+    for i := 0; i < len(q); i += k {
+        if i > len(q)-k {
+            break
+        }
+        pre.Next = q[i+k-1]
+        next := q[i+k-1].Next
+        for j := i+k-1; j > i; j-- {
+            q[j].Next = q[j-1]
+        }
+        q[i].Next = next
+        pre = q[i]
+    }
+    return dunny.Next
+}
+            </code></pre>
 
         </section>
         <section id="随机链表的复制">
             <h1>随机链表的复制</h1>
-            <p><a href="https://leetcode.cn/problems/copy-list-with-random-pointer" target="_blank" rel="noreferrer">题目链接</a></p>
+            <p><a href="https://leetcode.cn/problems/copy-list-with-random-pointer" target="_blank"
+                    rel="noreferrer">题目链接</a></p>
             <p>这道题的思路是使用哈希表。首先遍历链表，将每个节点及其对应的随机指针存入哈希表中。然后再次遍历链表，根据哈希表中的随机指针创建新节点，并连接到新链表中。最后返回新链表的头节点。</p>
             <p>这里给出Go代码：</p>
             <pre><code>
