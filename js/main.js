@@ -96,74 +96,107 @@ document.addEventListener('DOMContentLoaded', async () => {
         topArticles.length = 0;
         normalArticles.length = 0;
 
-        let fileList = [];
-        if (column.isHome) {
-            // 加载所有栏目的文章
-            const allColumnFiles = columns
-                .filter(col => !col.isHome)
-                .map(col => fetch(`../html/${col.filesPath}`));
+        try {
+            let fileList = [];
+            if (column.isHome) {
+                const allColumnFiles = columns
+                    .filter(col => !col.isHome)
+                    .map(col => fetch(`../html/${col.filesPath}`));
 
-            const responses = await Promise.all(allColumnFiles);
-            const jsonResults = await Promise.all(responses.map(res => res.json()));
-            fileList = jsonResults.flat();
-        } else {
-            // 加载特定栏目的文章
-            const response = await fetch(`../html/${column.filesPath}`);
-            fileList = await response.json();
-        }
+                const responses = await Promise.all(allColumnFiles);
+                const jsonResults = await Promise.all(responses.map(res => res.json()));
+                fileList = jsonResults.flat();
+            } else {
+                const response = await fetch(`../html/${column.filesPath}`);
+                fileList = await response.json();
+            }
 
-        // 处理文章列表
-        for (const file of fileList) {
-            const res = await fetch(`../html/${file}`);
-            const text = await res.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
+            // 处理文章列表
+            for (const file of fileList) {
+                try {
+                    const res = await fetch(`../html/${file}`);
+                    const text = await res.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
 
-            // 获取文章标题
-            const title = doc.querySelector('head > title').textContent;
+                    // 检查必要元素
+                    const titleElement = doc.querySelector('head > title');
+                    if (!titleElement) {
+                        console.error(`文件 ${file} 缺少 <title> 标签`);
+                        continue;
+                    }
 
-            // 获取最后编辑时间
-            const lastEditedMatch = doc.querySelector('body > footer.last-edit > p').textContent.match(/最后编辑时间: ([\d-]+\s[\d:]+)/);
-            const lastEdited = lastEditedMatch ? lastEditedMatch[1] : null;
+                    const footerElement = doc.querySelector('body > footer.last-edit > p');
+                    if (!footerElement) {
+                        console.error(`文件 ${file} 缺少 footer.last-edit > p 元素`);
+                        continue;
+                    }
 
-            // 获取优先级（priority 元数据）
-            const priorityMeta = doc.querySelector('meta[name="priority"]');
-            const priority = priorityMeta ? priorityMeta.getAttribute('content') : 'normal';
+                    const title = titleElement.textContent;
+                    const lastEditedMatch = footerElement.textContent.match(/最后编辑时间: ([\d-]+\s[\d:]+)/);
 
-            if (lastEdited) {
-                const articleData = { title, lastEdited, link: `html/${file}`, priority };
+                    if (!lastEditedMatch) {
+                        console.error(`文件 ${file} 的时间格式不正确，应为: "最后编辑时间: YYYY-MM-DD HH:mm:ss"`);
+                        continue;
+                    }
 
-                // 根据优先级将文章加入不同的队列
-                if (priority === 'top') {
-                    topArticles.push(articleData);
-                } else {
-                    normalArticles.push(articleData);
+                    const lastEdited = lastEditedMatch[1];
+                    // 检查时间是否合法
+                    const editDate = new Date(lastEdited.replace(/-/g, '/'));
+                    if (isNaN(editDate.getTime()) || editDate > new Date()) {
+                        console.error(`文件 ${file} 的时间 ${lastEdited} 无效或是未来时间`);
+                        continue;
+                    }
+
+                    const priorityMeta = doc.querySelector('meta[name="priority"]');
+                    const priority = priorityMeta ? priorityMeta.getAttribute('content') : 'normal';
+
+                    if (priority !== 'normal' && priority !== 'top') {
+                        console.warn(`文件 ${file} 的 priority 值 "${priority}" 无效，将使用 "normal"`);
+                    }
+
+                    const articleData = { title, lastEdited, link: `html/${file}`, priority };
+
+                    if (priority === 'top') {
+                        topArticles.push(articleData);
+                    } else {
+                        normalArticles.push(articleData);
+                    }
+
+                } catch (err) {
+                    console.error(`处理文件 ${file} 时发生错误:`, err);
+                    continue;
                 }
             }
+
+            // 排序置顶文章队列：按时间倒序（越新越靠上）
+            topArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
+
+            // 排序普通文章队列：按时间倒序（越新越靠上）
+            normalArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
+
+            console.log('Sorted top articles:', topArticles);
+            console.log('Sorted normal articles:', normalArticles);
+
+            // 清空并重新渲染文章列表
+            const articlesContainer = document.getElementById('articles');
+            articlesContainer.innerHTML = '';
+
+            topArticles.forEach(article => {
+                const articleLink = createArticleElement(article);
+                articlesContainer.appendChild(articleLink);
+            });
+
+            normalArticles.forEach(article => {
+                const articleLink = createArticleElement(article);
+                articlesContainer.appendChild(articleLink);
+            });
+
+        } catch (err) {
+            console.error('加载文章列表时发生错误:', err);
+            const articlesContainer = document.getElementById('articles');
+            articlesContainer.innerHTML = '<div class="error">加载文章列表失败，请刷新页面重试</div>';
         }
-
-        // 排序置顶文章队列：按时间倒序（越新越靠上）
-        topArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
-
-        // 排序普通文章队列：按时间倒序（越新越靠上）
-        normalArticles.sort((a, b) => new Date(b.lastEdited.replace(/-/g, '/')) - new Date(a.lastEdited.replace(/-/g, '/')));
-
-        console.log('Sorted top articles:', topArticles);
-        console.log('Sorted normal articles:', normalArticles);
-
-        // 清空并重新渲染文章列表
-        const articlesContainer = document.getElementById('articles');
-        articlesContainer.innerHTML = '';
-
-        topArticles.forEach(article => {
-            const articleLink = createArticleElement(article);
-            articlesContainer.appendChild(articleLink);
-        });
-
-        normalArticles.forEach(article => {
-            const articleLink = createArticleElement(article);
-            articlesContainer.appendChild(articleLink);
-        });
     }
 
     // 初始加载主页文章
