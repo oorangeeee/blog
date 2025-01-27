@@ -56,6 +56,7 @@
                 <li><a href="#K个一组翻转链表">K个一组翻转链表</a></li>
                 <li><a href="#随机链表的复制">随机链表的复制</a></li>
                 <li><a href="#排序链表">排序链表</a></li>
+                <li><a href="#合并 K 个升序链表">合并 K 个升序链表</a></li>
             </ul>
         </nav>
         <p class="article-intro">声明：本文题解所有代码都是本人编写，但由于本人能力有限，故解题思路大多参考和阅读他人文档，如果本文有侵权行为，请及时联系我删除。</p>
@@ -1485,6 +1486,68 @@ func sortList(head *ListNode) *ListNode {
 }
             </code></pre>
         </section>
+        <section id="合并 K 个升序链表">
+            <h1>合并 K 个升序链表</h1>
+            <p><a href="https://leetcode.cn/problems/merge-k-sorted-lists" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>这道题的思路是使用优先队列。首先将所有链表的头节点放入优先队列中，然后依次取出队列中的最小节点，将其加入结果链表中，并将其下一个节点放入队列中。重复这个过程直到队列为空。最后返回结果链表的头节点。</p>
+            <p>没什么难度，但是对于不同语言可能感受不一样，因为C++有线程的优先队列，但是GO需要自己实现对应的接口。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+import "container/heap"
+
+type PriorityQueue []*ListNode
+
+func (pq PriorityQueue) Len() int {
+    return len(pq)
+}
+
+func (pq PriorityQueue) Less(i, j int) bool {
+    return pq[i].Val &lt; pq[j].Val
+}
+
+func (pq PriorityQueue) Swap(i, j int) {
+    pq[i], pq[j] = pq[j], pq[i]
+}
+
+func (pq *PriorityQueue) Push(x interface{}) {
+    *pq = append(*pq, x.(*ListNode))
+}
+
+func (pq *PriorityQueue) Pop() interface{} {
+    ans := (*pq)[pq.Len()-1]
+    *pq = (*pq)[0:pq.Len()-1]
+    return ans
+}
+
+func mergeKLists(lists []*ListNode) *ListNode {
+    pq := &amp;PriorityQueue{}
+    heap.Init(pq)
+    for _, head := range lists {
+        if head != nil {
+            heap.Push(pq, head)
+        }
+    }
+    dummy := new(ListNode)
+    p := dummy
+    for pq.Len() &gt; 0 {
+        node := heap.Pop(pq).(*ListNode)
+        p.Next = node
+        p = p.Next
+        if node.Next != nil {
+            heap.Push(pq, node.Next)
+        }
+    }
+    return dummy.Next
+}
+            </code></pre>
+        </section>
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
@@ -1497,7 +1560,7 @@ func sortList(head *ListNode) *ListNode {
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-24 17:43:07</p>
+        <p>最后编辑时间: 2025-01-27 22:02:02</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
