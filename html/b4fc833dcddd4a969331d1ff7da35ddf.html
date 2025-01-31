@@ -57,6 +57,19 @@
                 <li><a href="#随机链表的复制">随机链表的复制</a></li>
                 <li><a href="#排序链表">排序链表</a></li>
                 <li><a href="#合并 K 个升序链表">合并 K 个升序链表</a></li>
+                <li><a href="#LRU缓存">LRU缓存</a></li>
+                <li><a href="#二叉树的中序遍历">二叉树的中序遍历</a></li>
+                <li><a href="#二叉树最大深度">二叉树最大深度</a></li>
+                <li><a href="#翻转二叉树">翻转二叉树</a></li>
+                <li><a href="#对称二叉树">对称二叉树</a></li>
+                <li><a href="#二叉树的直径">二叉树的直径</a></li>
+                <li><a href="#二叉树的层序遍历">二叉树的层序遍历</a></li>
+                <li><a href="#将有序数组转换为二叉搜索树">将有序数组转换为二叉搜索树</a></li>
+                <li><a href="#验证二叉搜索树">验证二叉搜索树</a></li>
+                <li><a href="#二叉搜索树中第K小的元素">二叉搜索树中第K小的元素</a></li>
+                <li><a href="#二叉树的右视图">二叉树的右视图</a></li>
+                <li><a href="#二叉树展开为链表">二叉树展开为链表</a></li>
+                <li><a href="#从前序与中序遍历序列构造二叉树">从前序与中序遍历序列构造二叉树</a></li>
             </ul>
         </nav>
         <p class="article-intro">声明：本文题解所有代码都是本人编写，但由于本人能力有限，故解题思路大多参考和阅读他人文档，如果本文有侵权行为，请及时联系我删除。</p>
@@ -1548,6 +1561,604 @@ func mergeKLists(lists []*ListNode) *ListNode {
 }
             </code></pre>
         </section>
+        <section id="LRU缓存">
+            <h1>LRU缓存</h1>
+            <p><a href="https://leetcode.cn/problems/lru-cache" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>首先明确什么是LRU缓存，LRU是Least Recently Used的缩写，即最近最少使用。</p>
+            <p>LRU缓存是一种缓存机制，它根据数据项的访问时间来决定哪些数据项应该被保留，哪些应该被淘汰。</p>
+            <p>LRU缓存的核心思想是：如果一个数据项最近被访问过，那么它在未来的访问频率会更高。因此，LRU缓存会优先保留最近被访问的数据项，而淘汰那些很久没有被访问的数据项。</p>
+            <p>实现LRU缓存其实有最优方法，那就是双向链表+哈希表。其中双向链表用于维护数据项的顺序，哈希表用于快速查找数据项。</p>
+            <p>具体实现步骤：</p>
+            <ol>
+                <li>定义双向链表节点结构体，包含前驱/后继指针和键值对</li>
+                <li>实现双向链表的基本操作：
+                    <ul>
+                        <li>push()：在链表尾部插入新节点（最近使用）</li>
+                        <li>pop()：移除链表头节点（最久未使用）</li>
+                        <li>changeLRU()：将某个节点移动到链表尾部（更新为最近使用）</li>
+                    </ul>
+                </li>
+                <li>LRUCache结构体包含：
+                    <ul>
+                        <li>capacity：缓存容量限制</li>
+                        <li>listMap：哈希表用于O(1)时间查找节点</li>
+                        <li>list：双向链表维护使用顺序</li>
+                    </ul>
+                </li>
+                <li>Get操作：
+                    <ul>
+                        <li>通过哈希表快速定位节点</li>
+                        <li>将该节点移动到链表尾部</li>
+                        <li>返回节点值</li>
+                    </ul>
+                </li>
+                <li>Put操作：
+                    <ul>
+                        <li>若key不存在：
+                            <ul>
+                                <li>容量满时先移除链表头节点</li>
+                                <li>创建新节点并插入链表尾部</li>
+                            </ul>
+                        </li>
+                        <li>若key存在：
+                            <ul>
+                                <li>更新节点值</li>
+                                <li>将节点移动到链表尾部</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+type node struct {
+    key int
+    val int
+    next *node
+    pre *node
+}
+
+func newNode(key,val int) *node {
+    return &amp;node{
+        key:key,
+        val:val,
+    }
+}
+
+type doubleList struct {
+    head *node
+    tail *node
+}
+
+func newDoubleList() *doubleList {
+    headDunny:=newNode(0,0)
+    tailDunny:=newNode(0,0)
+    headDunny.next=tailDunny
+    tailDunny.pre=headDunny
+    return &amp;doubleList{
+        head: headDunny,
+        tail: tailDunny,
+    }
+}
+
+func (this *doubleList) push(key,val int)*node{
+    newnode:=newNode(key,val)
+    this.tail.pre.next=newnode
+    newnode.pre=this.tail.pre
+    newnode.next=this.tail
+    this.tail.pre=newnode
+    return newnode
+}
+
+func (this *doubleList)pop()*node{
+    delNode:=this.head.next
+    this.head.next=this.head.next.next
+    this.head.next.pre=this.head
+    return delNode
+}
+
+func (this *doubleList)changeLRU(nodeP *node){
+    nodeP.pre.next=nodeP.next
+    nodeP.next.pre=nodeP.pre
+    nodeP.next=this.tail
+    nodeP.pre=this.tail.pre
+    this.tail.pre.next=nodeP
+    this.tail.pre=nodeP
+}
+
+type LRUCache struct {
+    capacity int
+    listMap map[int]*node
+    list *doubleList
+}
+
+func Constructor(capacity int) LRUCache {
+    mapTmp:=make(map[int]*node)
+    listTmp:=newDoubleList()
+    return LRUCache{
+        capacity: capacity,
+        listMap: mapTmp,
+        list: listTmp,
+    }
+}
+
+
+func (this *LRUCache) Get(key int) int {
+    nodeP,ok:=this.listMap[key]
+    if !ok {
+        return -1
+    }
+    this.list.changeLRU(nodeP)
+    return nodeP.val
+}
+
+
+func (this *LRUCache) Put(key int, value int) {
+    nodeP,ok:=this.listMap[key]
+    if !ok {
+        if len(this.listMap) == this.capacity {
+            delnode:=this.list.pop()
+            delete(this.listMap,delnode.key)
+        }
+        addnode:=this.list.push(key,value)
+        this.listMap[key]=addnode
+    }else {
+        nodeP.val=value
+        this.list.changeLRU(nodeP)
+    }
+}
+
+
+/**
+* Your LRUCache object will be instantiated and called as such:
+* obj := Constructor(capacity);
+* param_1 := obj.Get(key);
+* obj.Put(key,value);
+*/
+            </code></pre>
+        </section>
+        <section id="二叉树的中序遍历">
+            <h1>二叉树的中序遍历</h1>
+            <p><a href="https://leetcode.cn/problems/binary-tree-inorder-traversal" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>最基础的题目，无需多言，直接给出代码：</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+ func inorderTraversal(root *TreeNode) []int {
+    if root==nil {
+        return []int{}
+    }
+    ans:=make([]int,0)
+    ans=append(ans,inorderTraversal(root.Left)...)
+    ans=append(ans,root.Val)
+    ans=append(ans,inorderTraversal(root.Right)...)
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="二叉树最大深度">
+            <h1>二叉树最大深度</h1>
+            <p><a href="https://leetcode.cn/problems/maximum-depth-of-binary-tree" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>这道题有多种思路，子问题分解可以做，遍历也可以做，这里用遍历来做，无论是哪种遍历都可以。</p>
+            <p>具体思路是：定义一个遍历函数，每次向下遍历一次都对depth++，如果超过当前最大深度，则更新最大深度，每次返回的时候都depth--，直到最后遍历完成后，就找到了最大深度。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func maxDepth(root *TreeNode) int {
+    ans:=0
+    depth:=0
+    var findDepth func(*TreeNode)
+    findDepth=func(root *TreeNode){
+        depth++
+        if root==nil {
+            return
+        }
+        if depth&gt;ans{
+            ans=depth
+        }
+        findDepth(root.Left)
+        depth--
+        findDepth(root.Right)
+        depth--
+    }
+    findDepth(root)
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="翻转二叉树">
+            <h1>翻转二叉树</h1>
+            <p><a href="https://leetcode.cn/problems/invert-binary-tree" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>解题思路：</p>
+            <ol>
+                <li>采用递归思想，像照镜子一样交换每个节点的左右子树</li>
+                <li>递归终止条件：当前节点为空时返回nil</li>
+                <li>具体步骤：
+                    <ul>
+                        <li>1. 交换当前节点的左右子节点（root.Left和root.Right互换）</li>
+                        <li>2. 递归处理左子树（处理后的左子树其实是原来的右子树）</li>
+                        <li>3. 递归处理右子树（处理后的右子树其实是原来的左子树）</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func invertTree(root *TreeNode) *TreeNode {
+    if root ==nil {
+        return nil
+    }
+    root.Left,root.Right=root.Right,root.Left
+    invertTree(root.Left)
+    invertTree(root.Right)
+    return root
+}
+            </code></pre>
+        </section>
+        <section id="对称二叉树">
+            <h1>对称二叉树</h1>
+            <p><a href="https://leetcode.cn/problems/symmetric-tree" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>这道题要求一个二叉树的左右两个子树镜像对称，那么我们可以递归的思考这个问题，只要当前节点的左右子节点对称，并且左右子树的子节点也对称，那么这个二叉树就是对称的。所以可以递归判断整个树。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func isSymmetric(root *TreeNode) bool {
+	var check func(left, right *TreeNode) bool
+	check = func(left, right *TreeNode) bool {
+		if left == nil || right == nil {
+			return left == right
+		}
+		if left.Val != right.Val {
+			return false
+		}
+		return check(left.Left, right.Right) &amp;&amp; check(left.Right, right.Left)
+	}
+	if root == nil {
+		return true
+	}
+	return check(root.Left, root.Right)
+}
+            </code></pre>
+        </section>
+        <section id="二叉树的直径">
+            <h1>二叉树的直径</h1>
+            <p><a href="https://leetcode.cn/problems/diameter-of-binary-tree" rel="noreferrer" target="_blank">题目链接</a>
+            </p>
+            <p>这道题的关键在于理解一个树的直径可能不通过根节点。并且计算通过一个节点的直径，其计算方法为左右子树的最大深度之和。</p>
+            <p>所以其实可以用递归的思想，每次递归都计算当前节点的左右子树的最大深度，然后更新最大直径。但是这种方法的事件发展度太高了。</p>
+            <p>所以可以用后序遍历的思想，先遍历左右子树，然后计算当前节点的直径，最后更新最大直径。同时，在遍历左右子树的时候，可以顺便计算左右子树的最大深度。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+ func diameterOfBinaryTree(root *TreeNode) int {
+     var findAns func(*TreeNode) int
+     ans:=0
+     findAns = func(root *TreeNode) int {
+         if root ==nil {
+             return 0
+         }
+         l:=findAns(root.Left)
+         r:=findAns(root.Right)
+         if ans<l+r ans="l+r" if="" l="" {="" }="">r {
+             return l+1
+         }
+         return r+1
+     }
+     findAns(root)
+     return ans
+ }
+
+            </l+r></code></pre>
+        </section>
+        <section id="二叉树的层序遍历">
+            <h1>二叉树的层序遍历</h1>
+            <p><a href="https://leetcode.cn/problems/binary-tree-level-order-traversal" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>这道题的思路是使用广度优先搜索（BFS）。首先将根节点入队，然后依次将队列中的节点出队，并将出队节点的左右子节点入队。重复这个过程直到队列为空。最后返回结果。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func levelOrder(root *TreeNode) [][]int {
+    if root==nil {
+        return [][]int{}
+    }
+    q:=make([]*TreeNode,0)
+    ans:=make([][]int,0)
+    q=append(q,root)
+    for len(q)!=0 {
+        qTmp:=make([]*TreeNode,len(q))
+        copy(qTmp,q)
+        q=q[len(q):]
+        ansTmp:=make([]int,0)
+        for _,node:=range qTmp{
+            ansTmp=append(ansTmp,node.Val)
+            if node.Left!=nil {
+                q=append(q,node.Left)
+            }
+            if node.Right!=nil {
+                q=append(q,node.Right)
+            }
+
+        }
+        ans=append(ans,ansTmp)
+    }
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="将有序数组转换为二叉搜索树">
+            <h1>将有序数组转换为二叉搜索树</h1>
+            <p><a href="https://leetcode.cn/problems/convert-sorted-array-to-binary-search-tree" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>思路很简单，对于一个有序数组而言，其最中间的元素一定是根节点，然后递归处理左右两部分。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func sortedArrayToBST(nums []int) *TreeNode {
+    if len(nums)==0 {
+        return nil
+    }
+    root:=new(TreeNode)
+    root.Val=nums[len(nums)/2]
+    root.Left=sortedArrayToBST(nums[:len(nums)/2])
+    root.Right=sortedArrayToBST(nums[len(nums)/2+1:])
+    return root
+}
+            </code></pre>
+        </section>
+        <section id="验证二叉搜索树">
+            <h1>验证二叉搜索树</h1>
+            <p><a href="https://leetcode.cn/problems/validate-binary-search-tree" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>很简单，一个二叉搜索树是正确的的充要条件就是其中序遍历是递增序列。所以，只需要得到其中序遍历的结果，判断是否为递增序列即可。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func isValidBST(root *TreeNode) bool {
+    var midTravser func(root *TreeNode)[]int
+    midTravser = func(root *TreeNode) []int{
+        if root== nil {
+            return []int{}
+        }
+        ans:=make([]int,0)
+        ans=append(ans,midTravser(root.Left)...)
+        ans=append(ans,root.Val)
+        ans=append(ans,midTravser(root.Right)...)
+        return ans
+    }
+    nums:=midTravser(root)
+    i,j:=0,1
+    for j&lt;len(nums){ 
+        if nums[j]&lt;=nums[i] { 
+            return false 
+        } 
+        i++ 
+        j++ 
+    } 
+    return true 
+}
+            </code></pre>
+        </section>
+        <section id="二叉搜索树中第K小的元素">
+            <h1>二叉搜索树中第K小的元素</h1>
+            <p><a href="https://leetcode.cn/problems/kth-smallest-element-in-a-bst" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>BST的最重要的性质是什么呢？那就是中序遍历是递增序列。所以，只需要中序遍历，然后返回第k个元素即可。当然可以在遍历到第K个元素的时候终止遍历，可以节约时间。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func kthSmallest(root *TreeNode, k int) int {
+    num:=0
+    res:=0
+    ifFind:=false
+    var midTravser func(*TreeNode)[]int
+    midTravser=func(root *TreeNode)[]int {
+        if root ==nil {
+            return []int{}
+        }
+        ans:=make([]int,0)
+        ans=append(ans,midTravser(root.Left)...)
+        if ifFind {
+            return ans
+        }
+        ans=append(ans,root.Val)
+        num++
+        if num==k {
+            res=root.Val
+            ifFind=true
+            return ans
+        }
+        ans=append(ans,midTravser(root.Right)...)
+        if ifFind {
+            return ans
+        }
+        return ans
+    }
+    midTravser(root)
+    return res
+}
+            </code></pre>
+        </section>
+        <section id="二叉树的右视图">
+            <h1>二叉树的右视图</h1>
+            <p><a href="https://leetcode.cn/problems/binary-tree-right-side-view" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>翻译一下题目，题目的意思是返回二叉树每一层最右边的节点。那不就是每一层最后一个节点吗？所以，只需要层序遍历，然后返回每一层最后一个节点即可。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func rightSideView(root *TreeNode) []int {
+    res := make([]int, 0)
+    var BFS func(*TreeNode)
+    BFS = func(root *TreeNode) {
+        if root == nil {
+            return
+        }
+        q := make([]*TreeNode, 0)
+        q = append(q, root)
+        for len(q) != 0 {
+            tmpQ := make([]*TreeNode, len(q))
+            copy(tmpQ, q)
+            q = q[len(q):]
+            for i := 0; i &lt; len(tmpQ); i++ { 
+                if i == len(tmpQ)-1 { 
+                    res = append(res, tmpQ[i].Val) 
+                } 
+                if tmpQ[i].Left != nil {
+                    q = append(q, tmpQ[i].Left) 
+                } 
+                if tmpQ[i].Right != nil { 
+                    q = append(q, tmpQ[i].Right) 
+                } 
+            } 
+        } 
+    } 
+    BFS(root) 
+    return res 
+}
+            </code></pre>
+        </section>
+        <section id="二叉树展开为链表">
+            <h1>二叉树展开为链表</h1>
+            <p><a href="https://leetcode.cn/problems/flatten-binary-tree-to-linked-list" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>题目要求按照前序遍历展开，最后全部放到右子树。二叉树的解法无非遍历和子问题分解。这道题很明显是子问题分解，先处理左右子树，左右子树压缩完后，拼接到当前根节点的右子树即可。你完全无需考虑如何转化左右子树，你只需要考虑转化了左右子树后如何转化当前的整棵树。这就是递归的魅力。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func flatten(root *TreeNode) {
+    if root ==nil {
+        return
+    }
+    flatten(root.Left)
+    flatten(root.Right)
+    left:=root.Left
+    right:=root.Right
+    root.Left=nil
+    root.Right=left
+    p:=root
+    for p.Right!=nil {
+        p=p.Right
+    }
+    p.Right=right
+}
+            </code></pre>
+        </section>
+        <section id="从前序与中序遍历序列构造二叉树">
+            <h1>从前序与中序遍历序列构造二叉树</h1>
+            <p><a href="https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-inorder-traversal"
+                    rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>这道题的关键是搞清楚前中后续遍历得到的结果中每一部分和整棵树的关系。对于前序遍历，根节点是第一个元素，后面是左子树前序遍历结果，最后是右子树前序遍历结果。对于中序遍历，前半部分是左子树的遍历结果，中间是根节点，后半部分是右子树的遍历结果。对于后序遍历，前半部分是左子树的遍历结果，后半部分是右子树的遍历结果，最后是根节点。
+            </p>
+            <p>所以，前序遍历的第一个元素一定是根节点，然后在中序遍历中找到根节点，根节点左边的就是左子树，右边的就是右子树。然后递归处理左右子树。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func buildTree(preorder []int, inorder []int) *TreeNode {
+    if len(preorder)==0 || len(inorder)==0 {
+        return nil
+    }
+    root:=new(TreeNode)
+    root.Val=preorder[0]
+    i:=0
+    for ;i&lt;len(inorder);i++ { 
+        if inorder[i]==preorder[0] { 
+            break 
+        } 
+    } 
+    root.Left=buildTree(preorder[1:i+1],inorder[:i])
+    root.Right=buildTree(preorder[i+1:],inorder[i+1:]) 
+    return root 
+}
+            </code></pre>
+        </section>
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
@@ -1560,7 +2171,7 @@ func mergeKLists(lists []*ListNode) *ListNode {
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-27 22:02:02</p>
+        <p>最后编辑时间: 2025-01-31 17:29:22</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
