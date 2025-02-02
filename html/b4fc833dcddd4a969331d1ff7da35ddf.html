@@ -70,6 +70,9 @@
                 <li><a href="#二叉树的右视图">二叉树的右视图</a></li>
                 <li><a href="#二叉树展开为链表">二叉树展开为链表</a></li>
                 <li><a href="#从前序与中序遍历序列构造二叉树">从前序与中序遍历序列构造二叉树</a></li>
+                <li><a href="#路径总和III">路径总和III</a></li>
+                <li><a href="#二叉树的最近公共祖先">二叉树的最近公共祖先</a></li>
+                <li><a href="#岛屿数量">岛屿数量</a></li>
             </ul>
         </nav>
         <p class="article-intro">声明：本文题解所有代码都是本人编写，但由于本人能力有限，故解题思路大多参考和阅读他人文档，如果本文有侵权行为，请及时联系我删除。</p>
@@ -581,7 +584,7 @@ func minWindow(s string, t string) string {
             </ol>
             <p>这道题是经典的动态规划问题，题目要求找到一个数组中最大的子数组和。</p>
             <p>解决动态规划问题，首先解决状态是什么。也就是dp数组是什么？</p>
-            <p>一般的思维会认为dp[i]是前i个元素的最大子数组和，但是对于这道题，这样的解法是错误的，因为子数组必须连续，而“前i个元素的最大子数组和”并不一定包含第i个元素，那么如果此时通过状态转移方程，将第i+1个元素加入到dp[i]中，那么就无法保证子数组是连续的。
+            <p>一般的思维会认为dp[i]是前i个元素的最大子数组和，但是对于这道题，这样的解法是错误的，因为子数组必须连续，而"前i个元素的最大子数组和"并不一定包含第i个元素，那么如果此时通过状态转移方程，将第i+1个元素加入到dp[i]中，那么就无法保证子数组是连续的。
             </p>
             <p>那么dp[i]应该是什么呢？</p>
             <p>dp[i]应该是以第i个元素结尾的最大子数组和。</p>
@@ -2159,6 +2162,132 @@ func buildTree(preorder []int, inorder []int) *TreeNode {
 }
             </code></pre>
         </section>
+        <section id="路径总和III">
+            <h1>路径总和III</h1>
+            <p><a href="https://leetcode.cn/problems/path-sum-iii" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>我们知道需要找到的target长度路径可能出现在任何一个地方，所以这道题的第一个难点就是如何求得这个树中任何一段路径的长度。</p>
+            <p>针对这个问题，我们可以用前缀和的思想，前缀和的作用就是求得一段区间的和，所以我们可以计算并保存从根节点到当前节点的路径和，并且保存根节点到当前路径上所有祖先节点的路径和。当要求一段路径的长度时就只需要对应的前缀和相减即可。
+            </p>
+            <p>第二个难点是如何快速判断当前路径中是否有子路径等于target，最简单粗暴的方法就是计算每个子路径的和，然后判断是否等于target。但是这种方法的时间复杂度为O(n^2)，所以我们可以用哈希表来优化。我们求出一个前缀和后就以该前缀和为key存入哈希表中，哈希表的value为该前缀和出现的次数。
+            </p>
+            <p>那么要知道当前路径中是否有子路径等于target，只需要判断当前路径和减去target是否在哈希表中，如果在，则说明当前路径中存在子路径等于target。并且哈希表对应的value就是当前路径中存在多少个等于target的子路径。
+            </p>
+            <p>第三个难点就是如何维护哈希表：当每次遍历退出当前节点的时候都要将当前节点的前缀和从哈希表中删除，因为当前节点的前缀和已经不再属于当前路径了。</p>
+            <p>第四个难点就是边界和细节处理，首先要考虑的是遍历到一个新的节点后，是先将当前前缀和存入哈希表，还是先求当前路径和减去target是否在哈希表中？答案是先求当前路径和减去target是否在哈希表中，原因是如果先将当前前缀和加入哈希表，那么就意味着我们允许出现一条没有节点的路径（用当前前缀和减去刚刚存入哈希表的当前前缀和，得到的结果是0，但这个0是因为这个前缀和的差表示的路径中没有节点导致的），而题目要求一个路径必须至少有一个节点。
+            </p>
+            <p>其次我们考虑一个前缀和刚好是target的情况，这种情况会去哈希表中查找0，但0并不在哈希表中，所以需要特判这种情况。我们选择加一个虚拟头节点，这个节点的val是0，这样就保证了哈希表中一定有0这个key。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func pathSum(root *TreeNode, targetSum int) int {
+    count:=make(map[int64]int)
+    // 虚拟头节点，处理前缀和刚好等于target的情况
+    dunny:=new(TreeNode)
+    dunny.Val=0
+    dunny.Left=root
+    return travser(dunny,0,targetSum,count)
+}
+
+func travser(root *TreeNode, pathSum int64, targetSum int,count map[int64]int) int {
+    if root ==nil {
+        return 0
+    }
+    pathSum+=int64(root.Val)
+    // 先找结果后加入前缀和，避免出现允许空路径的情况
+    res:=count[pathSum-int64(targetSum)]
+    count[pathSum]++
+    res+=travser(root.Left,pathSum,targetSum,count)
+    res+=travser(root.Right,pathSum,targetSum,count)
+    count[pathSum]--
+    return res
+}
+    </code></pre>
+        </section>
+        <section id="二叉树的最近公共祖先">
+            <h1>二叉树的最近公共祖先</h1>
+            <p><a href="https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>LCA是很经典的题目，我们来思考如果一个节点是p和q的公共祖先节点会表现出什么性质？显然，通过这个节点向左子树和右子树遍历总能找到p和q。</p>
+            <p>那么我们就可以先遍历左右子树，如果左右子树中都能找到p和q，那么当前节点就是LCA。如果只在左子树中找到p和q，那么LCA就在左子树中，反之亦然。</p>
+            <p>值得注意的是，我们很容易想到如果在子树找到了p或者q那么就返回该节点，这没错。但是如果在左子树中找到了p或者q，就不去右子树遍历，这样是错误的。因为在左子树找到了p或者q中的一个，却不能保证另外一个是在左子树该节点的下方还是在右子树。如果在左子树该节点的下方，则LCA就是该节点，如果在右子树，则LCA就是根节点。所以无论如何都要完全遍历左右子树。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+/**
+* Definition for a binary tree node.
+* type TreeNode struct {
+* Val int
+* Left *TreeNode
+* Right *TreeNode
+* }
+*/
+func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
+    if root==nil {
+        return nil
+    }
+    if root.Val==p.Val||root.Val==q.Val {
+        return root
+    }
+    left:=lowestCommonAncestor(root.Left,p,q)
+    right:=lowestCommonAncestor(root.Right,p,q)
+    if left!=nil &amp;&amp; right!=nil {
+        return root
+    } else if left !=nil {
+        return left
+    } else {
+        return right
+    }
+}
+            </code></pre>
+        </section>
+        <section id="岛屿数量">
+            <h1>岛屿数量</h1>
+            <p><a href="https://leetcode.cn/problems/number-of-islands" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>其实很容易想到就是一个图论问题，遍历每个节点，如果该节点是陆地，则以该节点为起点进行DFS，将遍历到的陆地节点标记为已访问，最后统计遍历的次数即可。</p>
+            <p>值得一提的是如何遍历这样一个矩阵，实际上我们可以定义一个方向数组，分别表示上下左右四个方向，通过方向数组来遍历当前节点的上下左右。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func numIslands(grid [][]byte) int {
+    dirs := [][]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}
+    ans := 0
+    var ifAdd bool
+    var dfs func(x, y int)
+    dfs = func(x, y int) {
+        if x &lt; 0 || y &lt; 0 || x &gt;= len(grid) || y &gt;= len(grid[0]) {
+            return
+        }
+        if grid[x][y] == '0' {
+            return
+        }
+        if ifAdd == false {
+            ans++
+            ifAdd = true
+        }
+        grid[x][y] = '0'
+        for _, dir := range dirs {
+            dfs(x+dir[0], y+dir[1])
+        }
+    }
+    for i := 0; i &lt; len(grid); i++ {
+        for j := 0; j &lt; len(grid[0]); j++ {
+            ifAdd = false
+            if grid[i][j] == '1' {
+                dfs(i, j)
+            }
+        }
+    }
+    return ans
+}
+            </code></pre>
+        </section>
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
@@ -2171,7 +2300,7 @@ func buildTree(preorder []int, inorder []int) *TreeNode {
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-01-31 17:29:22</p>
+        <p>最后编辑时间: 2025-02-02 13:49:52</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
