@@ -76,6 +76,14 @@
                 <li><a href="#腐烂的橘子">腐烂的橘子</a></li>
                 <li><a href="#课程表">课程表</a></li>
                 <li><a href="#实现Trie（前缀树）">实现Trie（前缀树）</a></li>
+                <li><a href="#全排列">全排列</a></li>
+                <li><a href="#子集">子集</a></li>
+                <li><a href="#电话号码的字母组合">电话号码的字母组合</a></li>
+                <li><a href="#组合总和">组合总和</a></li>
+                <li><a href="#括号生成">括号生成</a></li>
+                <li><a href="#单词搜索">单词搜索</a></li>
+                <li><a href="#分割回文串">分割回文串</a></li>
+                <li><a href="#N皇后">N皇后</a></li>
             </ul>
         </nav>
         <p class="article-intro">声明：本文题解所有代码都是本人编写，但由于本人能力有限，故解题思路大多参考和阅读他人文档，如果本文有侵权行为，请及时联系我删除。</p>
@@ -2544,19 +2552,487 @@ func (this *Trie) StartsWith(prefix string) bool {
 */
             </code></pre>
         </section>
+        <section id="全排列">
+            <h1>全排列</h1>
+            <p><a href="https://leetcode.cn/problems/permutations" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>本题需要我们返回数组的所有排列可能。我们可以用回溯来做。</p>
+            <p>回溯，本质是决策树的DFS+剪枝。</p>
+            <p>既然用回溯来做，那么我们需要先确定这个题目的决策树：</p>
+            <img alt="全排列决策树" src="../images/全排列决策树.png" />
+            <p>可以看到决策树的每个枝条都代表站在当前节点可以做的一个选择。每个节点都代表当前的决策结果。</p>
+            <p>所以，我们只需要从根节点开始DFS这棵树，得到每个叶子节点的值，即为答案。</p>
+            <p>当然在代码里我们不能真的写一个这个树，并且也要增加额外的内容来保存用过的节点。具体请看代码注释。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func permute(nums []int) [][]int {
+    // 答案数组
+    ans := make([][]int, 0)
+    // 目前进行的决策，也就是选择的数字
+    path := make([]int, 0)
+    // 保存用过的数字
+    useMap := make(map[int]bool)
+    var travser func()
+    travser = func() {
+        // 如果决策数组的长度等于nums的长度，则说明已经做出了所有决策，将决策结果加入答案数组
+        if len(path) == len(nums) {
+            tmp := make([]int, len(path), cap(path))
+            copy(tmp, path)
+            ans = append(ans, tmp)
+        }
+        // 遍历nums，做出决策
+        for _, num := range nums {
+            // 如果当前数字已经被使用过，则跳过，这就是剪枝
+            if useMap[num] {
+                continue
+
+            }
+            // 做出决策
+            path = append(path, num)
+            useMap[num] = true
+            // 进入下一层，继续决策
+            travser()
+            // 回溯
+            useMap[num] = false
+            path = path[:len(path)-1]
+        }
+    }
+    travser()
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="子集">
+            <h1>子集</h1>
+            <p><a href="https://leetcode.cn/problems/subsets" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>题目要我们找出所有子集，既然如此也就符合回溯的思维。选择用回溯算法解题。</p>
+            <p>回溯的决策树如下：</p>
+            <img alt="子集决策树" src="../images/子集决策树.png" />
+            <p>可以看到，于全排列不同，决策树的每个节点都代表一个决策结果，每个枝条都代表一个选择。</p>
+            <p>所以我们每次决策后都要保存答案，包括最开始的时候也要保存。</p>
+            <p>我们脑海里的决策树是不能直接写到代码里的。毕竟谁没事还写个树？但是我们可以把其决策过程写进去。这道题是子集问题最简单的模板，子集问题和排列问题不同，子集问题的剪枝是要求只能选择上一个选择的数字后的数字。所以实现选择列表的方式也不同。具体请看代码。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func subsets(nums []int) [][]int {
+    // 决策结果
+    path := make([]int, 0)
+    ans := make([][]int, 0)
+    var find func(int)
+    find = func(s int) {
+        // 保存决策结果
+        tmp := make([]int, len(path), cap(path))
+        copy(tmp, path)
+        ans = append(ans, tmp)
+        // 通过s来控制选择列表，s是当前决策的起点，也就是选择列表的起点
+        for i := s; i &lt; len(nums); i++ {
+            // 做出决策
+            path = append(path, nums[i])
+            // 进入下一层，继续决策
+            find(i + 1)
+            // 回溯
+            path = path[:len(path)-1]
+        }
+
+    }
+    find(0)
+    return ans
+}
+</code></pre>
+        </section>
+        <section id="电话号码的字母组合">
+            <h1>电话号码的字母组合</h1>
+            <p><a href="https://leetcode.cn/problems/letter-combinations-of-a-phone-number" rel="noreferrer"
+                    target="_blank">题目链接</a></p>
+            <p>看过前两个回溯题目的题解后，这道题应该很简单了。我们来分析一下：</p>
+            <p>回溯问题对于每一个节点都要确定三个内容：</p>
+            <ol>
+                <li>决策列表</li>
+                <li>已决策内容</li>
+                <li>何时以及如何回溯</li>
+            </ol>
+            <p>针对这道题，决策树的每一层都按顺序对应着题目给定的字符串中的一个数字，每个节点的决策列表就是当前决策层对应的数字对应的字母，已决策内容就是从之前决策列表中选出的字母，回溯则是在决策树后续层的决策都做完后，进行回溯，并选择下一个决策。
+            </p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func letterCombinations(digits string) []string {
+    ans := make([]string, 0)
+    // 当前决策结果
+    sb := make([]byte, 0)
+    var find func(int)
+    find = func(s int) {
+        // 如果决策层数等于digits的长度，则说明已经做出了所有决策，将决策结果加入答案数组
+        if s &gt;= len(digits) {
+            if len(sb) &gt; 0 {
+                ans = append(ans, string(sb))
+
+            }
+            return
+        }
+        // 获取当前决策层的决策列表
+        alphas := getAlpha(digits[s])
+        for _, b := range alphas {
+            // 做出决策
+            sb = append(sb, b)
+            // 进入下一层，继续决策
+            find(s + 1)
+            // 回溯
+            sb = sb[:len(sb)-1]
+        }
+    }
+    find(0)
+    return ans
+}
+
+func getAlpha(num byte) []byte {
+    switch num {
+    case '2':
+        return []byte{'a', 'b', 'c'}
+    case '3':
+        return []byte{'d', 'e', 'f'}
+    case '4':
+        return []byte{'g', 'h', 'i'}
+    case '5':
+        return []byte{'j', 'k', 'l'}
+    case '6':
+        return []byte{'m', 'n', 'o'}
+    case '7':
+        return []byte{'p', 'q', 'r', 's'}
+    case '8':
+        return []byte{'t', 'u', 'v'}
+    case '9':
+        return []byte{'w', 'x', 'y', 'z'}
+    }
+    return []byte{}
+}
+            </code></pre>
+        </section>
+        <section id="组合总和">
+            <h1>组合总和</h1>
+            <p><a href="https://leetcode.cn/problems/combination-sum" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>我们要找到所有可能的组合，使得组合中的数字之和等于target。并且每个数字可以被使用多次。</p>
+            <p>先想一下如果一个数字不能被使用多次呢？那和我们子集的那道题就一样了，只不过加一个判断是否等于target的条件。</p>
+            <p>接着我们想一下我们子集那道题是怎么保证一个数字只选一次的？很简单，我们是用了一个start参数保证我们每次决策的起点都和之前的决策不重合。</p>
+            <p>那我们这道题就将每次Strat的起点设置为上一次决策的数字即可。这样就可以让一个数字多次利用，因为这次决策用了的数字还会出现在下一次决策的决策列表里。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func combinationSum(candidates []int, target int) [][]int {
+    ans := make([][]int, 0)
+    path := make([]int, 0)
+    pathSum := 0
+
+    var find func(int)
+    find = func(s int) {
+        // 如果当前决策结果的和等于target，则将决策结果加入答案数组
+        if pathSum == target {
+            tmp := make([]int, len(path), cap(path))
+            copy(tmp, path)
+            ans = append(ans, tmp)
+            return
+        } else if pathSum &gt; target {
+            // 如果当前决策结果的和大于target，则直接返回
+            return
+        }
+        for i := s; i &lt; len(candidates); i++ {
+            // 做出决策
+            path = append(path, candidates[i])
+            pathSum += candidates[i]
+            // 进入下一层，继续决策，注意这里i不加1，因为一个数字可以被使用多次
+            find(i)
+            // 回溯
+            path = path[:len(path)-1]
+            pathSum -= candidates[i]
+        }
+
+    }
+    find(0)
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="括号生成">
+            <h1>括号生成</h1>
+            <p><a href="https://leetcode.cn/problems/generate-parentheses" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>又是一道经典的回溯问题，每一层的决策都是选择“(”或者“)”，所以选择列表不变，已决策内容是当前的括号字符串。当字符串长度等于2n时，判断是否有效，并返回。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func generateParenthesis(n int) []string {
+    ans := make([]string, 0)
+    path := make([]byte, 0)
+    nowNum := 0
+    var find func()
+    find = func() {
+        // 当决策层数等于2n时，判断是否有效，并返回
+        if nowNum == 2*n {
+            if check(path) {
+                s := string(path)
+                ans = append(ans, s)
+            }
+            return
+        }
+        // 遍历决策列表
+        for i := range 2 {
+            if i == 0 {
+                // 做出决策
+                path = append(path, '(')
+                nowNum++
+                // 进入下一层，继续决策
+                find()
+                // 回溯
+                path = path[:len(path)-1]
+                nowNum--
+            } else {
+                // 做出决策
+                path = append(path, ')')
+                nowNum++
+                // 进入下一层，继续决策
+                find()
+                // 回溯
+                path = path[:len(path)-1]
+                nowNum--
+            }
+        }
+    }
+    find()
+    return ans
+}
+
+// 判断括号是否有效
+func check(bs []byte) bool {
+    s := make([]byte, 0)
+    for _, b := range bs {
+        if b == ')' &amp;&amp; len(s) &gt; 0 &amp;&amp; s[len(s)-1] == '(' {
+            s = s[:len(s)-1]
+            continue
+        }
+        s = append(s, b)
+    }
+    return len(s) == 0
+}
+            </code></pre>
+        </section>
+        <section id="单词搜索">
+            <h1>单词搜索</h1>
+            <p><a href="https://leetcode.cn/problems/word-search" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>这道题与其说是回溯，不如说是图的DFS。虽然但是其实回溯就是DFS。。。</p>
+            <p>思路很简单，从矩阵的每个点开始进行DFS，存储其结果，如果DFS的结果和目标单词相同，则返回true。如果DFS的决策结果长度大小大于目标单词的长度，则返回（剪枝）。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func exist(board [][]byte, word string) bool {
+    // 定义一个点结构体，用于存储坐标
+    type point struct {
+        x int
+        y int
+    }
+    row := len(board)
+    col := len(board[0])
+    dirs := [][]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}
+    ans := false
+    // 定义一个map，用于存储路径中的点
+    pathMap := make(map[point]bool)
+    // 定义一个切片，用于存储路径中的点
+    path := make([]byte, 0)
+    var find func(int, int)
+    find = func(x, y int) {
+        // 如果决策结果的长度等于目标单词的长度，则判断是否相等，并返回
+        if len(path) == len(word) {
+            // 如果决策结果和目标单词相等，则返回true
+            if word == string(path) {
+                ans = true
+            }
+            return
+        }
+        // 如果坐标越界，则返回
+        if x &lt; 0 || x &gt;= row || y &lt; 0 || y &gt;= col {
+            return
+        }
+        nowP := point{
+            x: x,
+            y: y,
+        }
+        // 如果当前点已经在路径中，则返回
+        if pathMap[nowP] {
+            return
+        } else {
+            // 如果当前点不在路径中，则将当前点加入路径
+            pathMap[nowP] = true
+        }
+        // 做出决策
+        path = append(path, board[x][y])
+        // 遍历决策列表
+        for _, dir := range dirs {
+            // 进入下一层，继续决策
+            find(x+dir[0], y+dir[1])
+            // 已经确定有了，则提前结束
+            if ans == true {
+                return
+            }
+        }
+        // 回溯
+        path = path[:len(path)-1]
+        pathMap[nowP] = false
+    }
+
+    // 从矩阵的每个点开始进行DFS
+    start := word[0]
+    for i := 0; i &lt; row; i++ {
+        for j := 0; j &lt; col; j++ {
+            if ans {
+                return ans
+            }
+            if board[i][j] != start {
+                continue
+            }
+            find(i, j)
+        }
+    }
+    return ans
+}
+            </code></pre>
+        </section>
+        <section id="分割回文串">
+            <h1>分割回文串</h1>
+            <p><a href="https://leetcode.cn/problems/palindrome-partitioning" rel="noreferrer" target="_blank">题目链接</a>
+            </p>
+            <p>题目要求返回所有可能的回文串分割方案。</p>
+            <p>很明显，从同一个位置开始，我们可以找到多个回文串，这就是我们的决策列表，每次决策后，从剩下的字符串中递归的进行决策与回溯。直到，字符串所有的内容都参与了某一次决策，则返回结果。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func partition(s string) [][]string {
+    ans := make([][]string, 0)
+    tmp := make([]string, 0)
+    var find func(int)
+    find = func(start int) {
+        if start &gt;= len(s) {
+            tmptmp := make([]string, len(tmp), cap(tmp))
+            copy(tmptmp, tmp)
+            ans = append(ans, tmptmp)
+            return
+        }
+        for i := start; i &lt;= len(s); i++ {
+            // 如果当前字符串是回文串，则将当前字符串加入决策结果
+            if isBackStr(s[start:i]) {
+                tmp = append(tmp, s[start:i])
+                // 进入下一层，继续决策
+                find(i)
+                // 回溯
+                tmp = tmp[:len(tmp)-1]
+            }
+        }
+
+    }
+    find(0)
+    return ans
+}
+func isBackStr(s string) bool {
+    if len(s) == 0 {
+        return false
+    }
+    a, b := 0, len(s)-1
+    for a &lt;= b {
+        if s[a] != s[b] {
+            return false
+        }
+        a++
+        b--
+    }
+    return true
+}
+            </code></pre>
+        </section>
+        <section id="N皇后">
+            <h1>N皇后</h1>
+            <p><a href="https://leetcode.cn/problems/n-queens" rel="noreferrer" target="_blank">题目链接</a></p>
+            <p>这道题是回溯的经典问题，我们需要在N*N的棋盘上放置N个皇后，并且每个皇后不能在同一行、同一列、同一对角线上。</p>
+            <p>我们直到在一行中不能出现多个皇后对吗，所以我们可以一行一行的进行决策，每次决策一个皇后放在哪一列。</p>
+            <p>于是决策树的每一层就代表决策一行皇后放在哪里，决策列表就是这一行可以放皇后的列。</p>
+            <p>所以我们在做决策的时候对于决策列表中的每个元素，我们都要判断是否与之前决策的皇后是否冲突。不冲突则做出决策，进入下一层，并在后续决策做完后回溯。</p>
+            <p>每次决策前都要判断当前决策的行是否超出了棋盘范围，如果超过了则说明找到了答案，保存答案并返回。</p>
+            <p>这里给出Go代码：</p>
+            <pre><code>
+func solveNQueens(n int) [][]string {
+    ans := make([][]string, 0)
+    // 棋盘
+    board := make([][]byte, n)
+    for i := 0; i &lt; n; i++ {
+        board[i] = make([]byte, n)
+        for j := 0; j &lt; n; j++ {
+            board[i][j] = '.'
+        }
+    }
+    var find func(int)
+    find = func(row int) {
+        // 如果超出了棋盘范围，说明找到答案，则保存答案并返回
+        if row == n {
+            stmp := make([]string, 0)
+            for _, byteArray := range board {
+                sb := string(byteArray)
+                stmp = append(stmp, sb)
+            }
+            ans = append(ans, stmp)
+            return
+        }
+        for i := 0; i &lt; n; i++ {
+            // 如果当前位置可以放置皇后，则做出决策
+            if isValid(&amp;board, row, i, n) {
+                board[row][i] = 'Q'
+                // 进入下一层，继续决策
+                find(row + 1)
+                // 回溯
+                board[row][i] = '.'
+            }
+        }
+
+    }
+    find(0)
+    return ans
+}
+
+// 判断当前位置是否可以放置皇后
+func isValid(boardP *[][]byte, row, col, n int) bool {
+    board := *boardP
+    for i := 0; i &lt; n; i++ {
+
+        if board[row][i] == 'Q' {
+            return false
+        }
+    }
+    for i := 0; i &lt; n; i++ {
+        if board[i][col] == 'Q' {
+            return false
+        }
+    }
+    for i, j := row, col; i &gt;= 0 &amp;&amp; j &gt;= 0; {
+        if board[i][j] == 'Q' {
+            return false
+        }
+        i--
+        j--
+    }
+    for i, j := row, col; i &gt;= 0 &amp;&amp; j &lt; n; {
+        if board[i][j] == 'Q' {
+            return false
+        }
+        i--
+        j++
+    }
+    return true
+}
+            </code></pre>
+        </section>
     </main>
     <footer class="beian-footer">
         <div class="beian-info">
-            <img alt="备案图标" class="beian-icon" src="../images/备案图标.png" />
+            <img alt="备案图标" class="beian-icon" src="../images/备案图标.png">
             <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer"
                 target="_blank">鄂公网安备 42011102005555 </a>
             <span class="spacer"> </span>
             <a class="icp-beian" href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer"
                 target="_blank">青ICP备2024002362号-1 </a>
+            </img>
         </div>
     </footer>
     <footer class="last-edit">
-        <p>最后编辑时间: 2025-02-02 23:47:56</p>
+        <p>最后编辑时间: 2025-02-06 17:24:36</p>
     </footer>
     <script src="../js/article.js"></script>
 </body>
