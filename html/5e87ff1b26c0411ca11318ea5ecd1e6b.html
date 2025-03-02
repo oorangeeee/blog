@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="normal" name="priority" />
+    <meta content="本文讲解Go后端项目测试方式，并讲解项目的常用调优技巧。" name="description" />
+    <meta content="Go, Golang, 后端, 调优, 内存泄漏, 并发性能, SQL调优" name="keywords" />
+    <meta content="橙子" name="author" />
+    <title>浅析Go后端项目线上问题排查方案（既如何调优后端项目）</title>
+    <link href="../css/article.css" rel="stylesheet" />
+    <link href="../css/beian.css" rel="stylesheet" />
+    <link href="../images/favicon.ico" rel="icon" type="image/x-icon" />
+</head>
+
+<body>
+    <header>
+        <h1>浅析Go后端项目线上问题排查方案（既如何调优后端项目）</h1>
+    </header>
+    <main>
+        <nav>
+            <h2>目录</h2>
+            <ul>
+                <li><a href="#什么是调优">什么是调优</a></li>
+                <li><a href="#如何发现问题">如何发现问题</a></li>
+                <li><a href="#如何定位问题">如何定位问题</a></li>
+            </ul>
+        </nav>
+        <section id="什么是调优">
+            <h2>什么是调优</h2>
+            <p>调优说白了，就是通过各种手段，提高程序的性能。</p>
+            <p>提升性能又包括两个大方向：</p>
+            <ul>
+                <li>提升程序的执行速度</li>
+                <li>降低程序的内存占用</li>
+            </ul>
+            <p>本文就这两个方向讲解在Go后端项目中的一些调优技巧。</p>
+        </section>
+        <section id="如何发现问题">
+            <h2>如何发现问题</h2>
+            <p>你为何想要调优？当然是发现程序性能没有达到你的预期。那么如何发现性能问题呢？本节来解决这个问题。</p>
+            <h3>压测</h3>
+            <p>发现问题最简单的方法：<strong>压测！</strong></p>
+            <p>何为压测？压测就是模拟大量用户访问，测试系统的承载能力。</p>
+            <p>压测的工具很多，比如：</p>
+            <ul>
+                <li>wrk</li>
+                <li>locust</li>
+                <li>jmeter</li>
+            </ul>
+            <p>这里只推荐<strong>wrk</strong>，没别的原因，因为它简单易学又好用，并且对于大部分项目来说，它足够了。</p>
+            <p>wrk的选项很多，可以通过输入<code>wrk</code>查看。</p>
+            <pre><code>
+Usage: wrk &lt;options&gt; &lt;url&gt;
+  Options:
+    -c, --connections &lt;N&gt;  Connections to keep open # 指定连接数
+    -d, --duration    &lt;T&gt;  Duration of test # 指定测试时间
+    -t, --threads     &lt;N&gt;  Number of threads to use # 指定线程数
+
+    -s, --script      &lt;S&gt;  Load Lua script file # 指定Lua脚本文件
+    -H, --header      &lt;H&gt;  Add header to request # 指定请求头
+        --latency          Print latency statistics # 打印延迟统计
+        --timeout     &lt;T&gt;  Socket/request timeout # 指定超时时间
+    -v, --version          Print version details # 打印版本信息
+
+  Numeric arguments may include a SI unit (1k, 1M, 1G)
+  Time arguments may include a time unit (2s, 2m, 2h)
+            </code></pre>
+            <p>最常用的选项是<code>-c</code>和<code>-d</code>，<code>-c</code>指定连接数，<code>-d</code>指定测试时间。</p>
+            <p>例如：</p>
+            <pre><code>
+wrk -c 1000 -d 10s -t 10 --latency https://your-api-url/start
+            </code></pre>
+            <p>这个命令的意思是：使用1000个连接，测试10秒，使用10个线程，打印延迟统计。</p>
+            <p>压测的命令写好后，就可以运行了。</p>
+            <p>运行后，你会看到类似以下的输出：</p>
+            <pre><code>
+Running 10s test @ https://your-api-url/start
+    10 threads and 1000 connections
+    Thread Stats Avg Stdev Max +/- Stdev
+        Latency 56.18ms 117.44ms 1.98s 92.87%
+        Req/Sec 123.81 89.99 410.00 63.18%
+    Latency Distribution
+        50% 29.49ms
+        75% 32.00ms
+        90% 43.03ms
+        99% 503.66ms
+    10569 requests in 10.09s, 2.30MB read
+    Socket errors: connect 1, read 0, write 0, timeout 22
+Requests/sec: 1047.91
+Transfer/sec: 233.29KB
+            </code></pre>
+            <p>也就是说10个线程，每个线程1000个连接，测试10秒，总共10000个请求。</p>
+            <p>分析一下输出：</p>
+            <ul>
+                <p><strong>线程统计</strong></p>
+                <li>
+                    <ol>
+                        <li>
+                            <p>Latency Distribution
+                                50% 29.49ms
+                                75% 32.00ms
+                                90% 43.03ms
+                                99% 503.66ms</p>
+                            <ul>
+                                <li>Latency 是延迟，也就是请求的响应时间。</li>
+                                <li>50% 29.49ms 是延迟的50%，也就是50%的请求的响应时间小于29.49ms。</li>
+                                <li>75% 32.00ms 是延迟的75%，也就是75%的请求的响应时间小于32.00ms。</li>
+                                <li>90% 43.03ms 是延迟的90%，也就是90%的请求的响应时间小于43.03ms。</li>
+                                <li>99% 503.66ms 是延迟的99%，也就是99%的请求的响应时间小于503.66ms。</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Req/Sec 122.50 64.08 360.00 68.72%</p>
+                            <ul>
+                                <li>Req/Sec 是每秒请求数。</li>
+                                <li>122.50 是一个线程每秒请求数的平均值。</li>
+                                <li>64.08 是标准差，也就是一个线程每秒请求数的波动范围。</li>
+                                <li>360.00 是最大值，也就是一个线程每秒请求数的峰值。</li>
+                                <li>68.72% 是百分比，也就是一个线程每秒请求数的分布情况。表示 68.72% 的请求在平均每秒请求数（122.50）加减标准差（64.08）的范围内。</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </li>
+                <p><strong>总统计</strong></p>
+                <li>
+                    <ol>
+                        <li>
+                            <p>10557 requests in 10.09s, 2.30MB read</p>
+                            <ul>
+                                <li>10557 是总请求数。</li>
+                                <li>10.09s 是总测试时间。</li>
+                                <li>2.30MB 是总读取数据量。</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Socket errors: connect 0, read 0, write 0, timeout 32</p>
+                            <ul>
+                                <li>connect 0 表示连接错误0次。</li>
+                                <li>read 0 表示读取错误0次。</li>
+                                <li>write 0 表示写入错误0次。</li>
+                                <li>timeout 32 表示超时32次。</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Requests/sec: 1046.05</p>
+                            <ul>
+                                <li>Requests/sec: 1046.05 是每秒处理的请求数。也就是所谓的QPS。</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Transfer/sec: 232.88KB</p>
+                            <ul>
+                                <li>Transfer/sec: 232.88KB 是每秒传输的数据量。</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </li>
+            </ul>
+            <p>这是压测Get请求的输出，压测Post/Put/Delete请求的输出类似，只是把需要用Lua脚本来做。</p>
+            <p>例如：</p>
+            <pre><code>
+wrk -c 1000 -d 10s -t 10 -s post.lua --latency https://your-api-url/start
+            </code></pre>
+            <p>post.lua 是一个Lua脚本，用于模拟Post/Put/Delete请求。</p>
+            <p>lua脚本的内容这里不再赘述，感兴趣的可以自行搜索。输出的分析和Get请求的分析类似。</p>
+            <h3>监测</h3>
+            <p>压测其实可以发现性能方面的问题，但是它不能告诉你内存方面的问题。</p>
+            <p>内存方面的问题，可以通过<strong>监测</strong>来发现。</p>
+            <p>其实如果详细讲解如何监测，也就是在将如何定位问题了，但是我们这里是讲如何发现问题，也就是说你只有发现问题了，才会想到要监测，才会定位并解决问题。</p>
+            <p>那么如何发现内存问题呢？</p>
+            <p>很简单，查看每一个进程的内存使用情况就行。这样就可以发现进程的内存使用是不是太高了。</p>
+            <p>最常用的命令是：<strong>ps</strong>，<strong>top</strong>，<strong>htop</strong>。</p>
+            <p>最酷最推荐的是 htop 因为其操作更多，更直观，并且界面更酷。</p>
+            <p>例如：</p>
+            <img alt="htop例子" src="../images/htop例子.png" />
+            <p>从中可以看到，内存使用最高的进程是哪个，然后就可以针对性的进行调优了。</p>
+            <p>同时你也可以手搓土制后台程序，对htop或者top进行轮询，检测每个进程的内存使用情况。如果超标，则设置对应的处理机制自动处理。</p>
+        </section>
+        <section id="如何定位问题">
+            <h2>如何定位问题</h2>
+            <p>ok，现在我们已经可以通过压测和监测发现问题了。那么接下来就是解决问题了。</p>
+            <h3>提升执行速度</h3>
+            <p>首先来讲如何提升执行速度。</p>
+            <p>想要提升执行速度，需要先找到在哪吃掉了CPU时间，怎么找？<strong>pprof</strong>！</p>
+            <p>pprof是Go语言自带的性能分析工具，可以分析程序的CPU使用情况和内存使用情况。</p>
+            <p>问题来了，pprof怎么用？</p>
+            <p>esay! 只需要在程序中注册pprof的服务器！再简单不过。</p>
+            <p>例如：</p>
+            <pre><code>
+package main
+
+import (
+    "log"
+    "net/http"
+    _ "net/http/pprof"
+    "os"
+    "runtime"
+    "sync"
+    "time"
+)
+
+func main() {
+    // 配置日志输出格式: 显示文件名行号+标准时间格式
+    log.SetFlags(log.Lshortfile | log.LstdFlags)
+    log.SetOutput(os.Stdout) // 确保日志输出到标准输出
+
+    // 性能分析相关配置
+    runtime.GOMAXPROCS(1) // 限制程序使用1个OS线程，更容易暴露并发问题
+    runtime.SetMutexProfileFraction(1) // 记录所有互斥锁的等待事件（1=100%采样）
+    runtime.SetBlockProfileRate(1) // 记录所有goroutine阻塞事件（纳秒级精度）
+
+
+    // 启动pprof性能分析服务器
+    go func() {
+        // 在2078端口启动HTTP服务，提供pprof接口：
+        if err := http.ListenAndServe(":2078", nil); err != nil {
+            log.Fatal(err)
+        }
+        os.Exit(1)
+    }()
+    // 执行程序原本的逻辑
+}
+
+            </code></pre>
+            <p>运行程序后，访问<code>http://localhost:2078/debug/pprof/profile</code>，就可以看到pprof的界面。</p>
+            <img alt="pprof示例" src="../images/pprof示例.png" />
+            <p>页面显示的这些指标就是程序运行时的pprof采集的数据，可以点击对应的指标，查看详细信息。</p>
+            <ol>
+                <li>allocs: 内存分配情况</li>
+                <li>block: 阻塞情况</li>
+                <li>cmdline: 命令行参数</li>
+                <li>goroutine: 协程情况</li>
+                <li>heap: 堆内存情况</li>
+                <li>mutex: 互斥锁情况</li>
+                <li>profile: 性能分析</li>
+                <li>threadcreate: 线程创建情况</li>
+                <li>trace: 追踪</li>
+            </ol>
+            <p>其中trace也是很重要的工具，但是这里不展开讲，后续会有文章详解。</p>
+            <p>而threadcreate所涉及的问题很复杂，并且与性能调优关系不大，所以这里不展开讲。</p>
+            <p>cmdline就是程序的启动命令，一般用不到。</p>
+            <p>除此之外，其他所有的命令都是调优的关键。</p>
+            <p>我们一步一步来。</p>
+            <p>这一节主要讲解如何提升执行速度，如果我们在用htop和top的时候，发现程序的CPU使用率很高，那么就可以使用pprof来分析。</p>
+            <p>我们借助profile来采集CPU的占用信息，所以可以先用go tool pprof来排查一下</p>
+            <pre><code>
+go tool pprof http://localhost:2078/debug/pprof/profile
+            </code></pre>
+            <p>然后就可以看到pprof的界面了。</p>
+            <img alt="pprof的profile界面" src="../images/pprof的profile界面.png" />
+            <p>输入<code>top</code>，可以看到CPU使用率最高的函数。</p>
+            <img alt="pprof的profile的top界面" src="../images/pprof的profile的top界面.png" />
+            <p>于是你可以定位到最吃CPU的函数，比如示例里占用了99.9%的CPU的<code>emptyLoop</code>。</p>
+            <p>于是你现在要定位到这个函数，看看为什么它这么耗CPU。</p>
+            <p>输入<code>list emptyLoop</code>，可以看到这个函数的具体实现。</p>
+            <img alt="pprof的profile的list界面" src="../images/pprof的profile的list界面.png" />
+            <p>可以发现这个函数里有一个for循环，无效循环了超多次。这其实让我想起来R星的GTA5线上BUG，在进入线上战局的时候会无效循环上亿次。</p>
+            <p>修改坏函数的逻辑，程序的速度即可提升。</p>
+            <p>实际上你还可以拥有一个<strong>pprof的web界面</strong>，这样你就可以更直观地看到程序的性能情况。</p>
+            <p>这个东东需要你有graphviz，其实各个平台都可以安装它，安装后在pprof的界面中输入<code>web</code>，就可以看到web界面。</p>
+            <img alt="pprof的web界面" src="../images/pprof的web界面.png" />
+            <p>我写的示例程序很简单，所以这里只有一个框框，而大型项目会有很深的调用栈，所以会有很多框框，其中越大的框框，说明这个函数越耗CPU。</p>
+            <p>通过这种方式也可以定位到最耗CPU的函数，然后修改它的逻辑，程序的速度即可提升。</p>
+            <p>如果你发现，通过这样的方法得到的信息中所有函数的CPU消耗都合理，那么说明你的程序逻辑没问题，还需要调优就要从其他方面入手。</p>
+            <p>这里罗列一些常见的行之有效的方案，由于时间关系，这里不展开讲，<strong>后续会有文章详解</strong>。</p>
+            <ol>
+                <li>
+                    <p>Go语言层面调优</p>
+                    <ol>
+                        <li>有锁换无锁</li>
+                        <li>协程池</li>
+                        <li>内存逃逸优化</li>
+                        <li>对象池</li>
+                        <li>GC优化</li>
+                        <li>......</li>
+                    </ol>
+                </li>
+                <li>
+                    <p>数据库层面调优</p>
+                    <ol>
+                        <li>
+                            <p>慢SQL优化</p>
+                            <ol>
+                                <li>找到慢SQL</li>
+                                <li>建立合适索引</li>
+                                <li>判断优化器是否使用索引</li>
+                                <li>索引覆盖</li>
+                                <li>避免索引失效</li>
+                                <li>联合索引避免file sort</li>
+                                <li>避免无效回表，例如：深分页问题。</li>
+                                <li>找到无效索引</li>
+                                <li>......</li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>连接池优化</p>
+                            <ol>
+                                <li>连接池大小</li>
+                                <li>连接池超时</li>
+                                <li>连接池空闲</li>
+                                <li>连接池预热</li>
+                                <li>......</li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>缓存优化</p>
+                            <ol>
+                                <li>缓存预热</li>
+                                <li>缓存更新</li>
+                                <li>......</li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>其他优化</p>
+                            <ol>
+                                <li>......</li>
+                            </ol>
+                        </li>
+                    </ol>
+                </li>
+            </ol>
+            <p>总而言之，如果详细讲解程序运行速度调优，那真是三天三夜都讲不完。这里先卖个关子，后续文章会详细讲解。</p>
+            <h3>降低内存占用</h3>
+            <p>降低内存占用，需要先找到在哪吃掉了内存，继续使用pprof。</p>
+            <p>pprof的命令和之前一样，只是需要采集的指标不同。</p>
+            <p>例如：</p>
+            <pre><code>
+go tool pprof http://localhost:2078/debug/pprof/heap
+            </code></pre>
+            <p>同样使用<code>top</code>命令，可以看到内存使用情况。</p>
+            <img alt="pprof的heap的top界面" src="../images/pprof的heap的top界面.png" />
+            <p>同理也可以使用<code>list</code>命令，查看具体是哪个函数占用了内存。</p>
+            <img alt="pprof的heap的list界面" src="../images/pprof的heap的list界面.png" />
+            <p>通过这种方式，可以定位到最耗内存的函数，然后修改它的逻辑，程序的内存占用即可降低。</p>
+            <p>当然这种方案适用于内存被错误占用的情况，而如果你发现逻辑没问题，内存没泄漏，那么就需要从其他方面入手。</p>
+            <p>这里罗列一些常见的行之有效的方案，由于时间关系，这里不展开讲，<strong>后续会有文章详解</strong>。</p>
+            <ol>
+                <li>使用sync.Pool，减少内存分配。</li>
+                <li>使用内存逃逸优化，减少堆上分配。</li>
+                <li>使用协程池，减少内存分配。</li>
+                <li>......</li>
+            </ol>
+            <p>当然其实我们知道，Go语言的GC是很强大的，所以很多时候我们不需要太担心内存占用问题。但是！GO语言是有可能发生Goroutine泄漏的！</p>
+            <p>Goroutine泄漏的场景有很多，这里不展开讲，<strong>后续会有文章详解</strong>。</p>
+            <p>这里只讲一个最常见的场景。</p>
+            <p>你们有没有想过，如果一个Goroutine向一个没初始化的channel发送/读取数据，会发生什么？</p>
+            <p>答案是：如果这个Goroutine不是main Goroutine，那么讲其永久挂起，也就是Goroutine泄漏。</p>
+            <p>如果这个Goroutine是main Goroutine，那么程序将直接崩溃。</p>
+            <p>所以，<strong>不要向未初始化的channel发送/读取数据</strong>。</p>
+            <p>至于其他内存优化的场景，请期待我的后续文章。</p>
+            <h3>总结</h3>
+            <p>性能调优是一个很复杂的话题，这里只是抛砖引玉，讲了一些最基础的发现问题和解决问题的方法。</p>
+            <p>后续我会持续更新文章，将我用到、学到的性能调优方法分享给大家。</p>
+        </section>
+    </main>
+    <footer class="beian-footer">
+        <div class="beian-info">
+            <img alt="备案图标" class="beian-icon" src="../images/备案图标.png" />
+            <a href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102005555" rel="noreferrer"
+                target="_blank">鄂公网安备 42011102005555 </a>
+            <span class="spacer"> </span>
+            <a class="icp-beian" href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer"
+                target="_blank">青ICP备2024002362号-1 </a>
+        </div>
+    </footer>
+    <footer class="last-edit">
+        <p>最后编辑时间: 2025-03-02 15:55:58</p>
+    </footer>
+    <script src="../js/article.js"></script>
+</body>
+
+</html>

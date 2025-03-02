@@ -75,6 +75,7 @@ function addGlobalStats() {
 
 // 修改章节统计样式
 document.querySelectorAll('section').forEach(section => {
+    section.querySelector('.article-stats')?.remove();
     const stats = countArticleStats(section);
     const statsBar = document.createElement('div');
     statsBar.className = 'article-stats';
@@ -96,4 +97,27 @@ document.querySelectorAll('section').forEach(section => {
 });
 
 // 初始化全局统计
-addGlobalStats(); 
+addGlobalStats();
+
+// 强制刷新统计
+document.querySelectorAll('section').forEach(section => {
+    section.querySelector('.article-stats')?.remove();
+    const stats = countArticleStats(section);
+    const statsBar = document.createElement('div');
+    statsBar.className = 'article-stats';
+    statsBar.innerHTML = `
+        <span class="stat-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M13 3H7v2h6V3m-6 10h2v6h-2v-6m2-2H7v2h2v-2m8-6h-2v8h2V5m0 10h-2v4h2v-4m4-10H3v18h18V3m2 20H1V1h22v22Z"/></svg>
+            <span class="stat-text">${stats.wordCount.toLocaleString()}字</span>
+        </span>
+        <span class="stat-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 17H7v-2h7v2m3-4H7v-2h10v2m0-4H7V7h10v2m2-4H5c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2m0 16H5V5h14v14Z"/></svg>
+            ${stats.codeBlocks}个代码块
+        </span>
+        <span class="stat-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 17H7v-2h7v2m3-4H7v-2h10v2m0-4H7V7h10v2m2-4H5c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2m0 16H5V5h14v14Z"/></svg>
+            ${stats.codeLines}行代码
+        </span>
+    `;
+    section.querySelector('h1').after(statsBar);
+}); 
