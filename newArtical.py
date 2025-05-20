@@ -8,7 +8,7 @@ def create_html_file():
     # 获取用户输入的标题
     title = input("请输入文章标题: ")
 
-    srcFile = input("请输入文章所属目录文件名称")
+    srcFile = input("请输入文章所属目录文件名称：")
 
     # 获取description和keywords
     description = input("请输入文章描述 (description): ")
@@ -29,7 +29,8 @@ def create_html_file():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # 使用 UUID 生成唯一的文件名
-    file_name = f"{uuid.uuid4().hex}.html"
+    file_name = uuid.uuid4().hex
+    file_name = title+"-"+file_name+".html"
     file_path = os.path.join(html_folder, file_name)
 
     # HTML 内容模板
@@ -42,6 +43,7 @@ def create_html_file():
 <meta name="description" content="{description}">
 <meta name="keywords" content="{keywords_str}">
 <meta name="author" content="橙子">
+<meta content="" name="ifHide">
 <title>{title}</title>
 <link rel="stylesheet" href="../css/article.css">
 <link rel="stylesheet" href="../css/beian.css">

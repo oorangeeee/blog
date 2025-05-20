@@ -119,6 +119,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(text, 'text/html');
 
+                    // 检查是否存在隐藏标记
+                    const hideMeta = doc.querySelector('meta[name="ifHide"]');
+                    if (hideMeta && hideMeta.getAttribute('content') === 'hide') {
+                        console.log(`文件 ${file} 被标记为隐藏，跳过加载`);
+                        continue;
+                    }
+
                     // 使用更宽松的选择器
                     const titleElement = doc.querySelector('title');
                     if (!titleElement) {
